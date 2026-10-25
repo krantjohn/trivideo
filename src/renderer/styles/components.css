@@ -1,0 +1,103 @@
+/* Button and interactive styles */
+.hover-btn {
+  transition: all var(--transition-fast);
+}
+
+.hover-btn:hover {
+  background-color: var(--bg-surface-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+.hover-btn-danger:hover {
+  background-color: rgba(239, 68, 68, 0.18) !important;
+  color: var(--status-danger) !important;
+}
+
+/* Window Control Buttons */
+.win-btn {
+  transition: all var(--transition-fast);
+}
+
+.win-btn:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.win-close-btn:hover {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+}
+
+/* Sidebar and Navigation */
+.nav-btn:hover {
+  background-color: var(--bg-surface-hover);
+  color: var(--text-primary);
+}
+
+.cat-pill:hover,
+.cat-chip-btn:hover {
+  background-color: var(--bg-surface-hover) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-normal) !important;
+}
+
+.platform-tab-btn {
+  transition: all var(--transition-fast);
+}
+
+.platform-tab-btn:hover {
+  background-color: var(--bg-surface-hover) !important;
+}
+
+/* Video Card Enhancements */
+.video-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-highlight) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.video-card:hover .card-thumb {
+  transform: scale(1.05);
+}
+
+.video-card:hover .card-play-overlay {
+  opacity: 1 !important;
+}
+
+.video-card:hover .card-play-overlay div {
+  transform: scale(1) !important;
+}
+
+.card-title-hover:hover {
+  color: var(--accent-primary) !important;
+}
+
+/* History Row */
+.history-row:hover {
+  background-color: var(--bg-surface-hover) !important;
+  border-color: var(--border-normal) !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+.spin-animation {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
