@@ -27,6 +27,23 @@ function analyzeLoginStatus(platform, cookies) {
     if (userId) {
       accountName = '小红书会员';
     }
+  } else if (platform === 'youtube') {
+    const loginCookie = cookies.find(
+      (c) => c.name === 'LOGIN_INFO' || c.name === 'SAPISID' || c.name === '__Secure-3PSID' || c.name === 'SID'
+    );
+    isLoggedIn = Boolean(loginCookie && loginCookie.value);
+    if (isLoggedIn) {
+      accountName = 'YouTube用户';
+    }
+  } else if (platform === 'kuaishou') {
+    const webSt = cookies.find((c) => c.name === 'kuaishou.server.web_st' || c.name === 'passToken');
+    const userId = cookies.find((c) => c.name === 'userId');
+    isLoggedIn = Boolean(webSt && webSt.value);
+    if (userId && userId.value) {
+      accountName = `快手用户: ${userId.value}`;
+    } else if (isLoggedIn) {
+      accountName = '快手会员';
+    }
   }
 
   return {
@@ -97,4 +114,49 @@ test('Session Logic: Xiaohongshu login cookie identification', (t) => {
     { name: 'web_session_ss', value: 'xhs-session-ss' },
   ]);
   assert.strictEqual(loggedInSs.isLoggedIn, true);
+});
+
+test('Session Logic: YouTube login cookie identification', (t) => {
+  const loggedOut = analyzeLoginStatus('youtube', [
+    { name: 'YSC', value: 'guest-session' },
+    { name: 'PREF', value: 'f1=50000000' },
+  ]);
+  assert.strictEqual(loggedOut.isLoggedIn, false);
+  assert.strictEqual(loggedOut.accountName, undefined);
+
+  const loggedInInfo = analyzeLoginStatus('youtube', [
+    { name: 'LOGIN_INFO', value: 'AFmmF2cwRQIhA...' },
+  ]);
+  assert.strictEqual(loggedInInfo.isLoggedIn, true);
+  assert.strictEqual(loggedInInfo.accountName, 'YouTube用户');
+
+  const loggedInGoogleAuth = analyzeLoginStatus('youtube', [
+    { name: 'SAPISID', value: 'secret-sapisid' },
+    { name: '__Secure-3PSID', value: 'secure-token' },
+  ]);
+  assert.strictEqual(loggedInGoogleAuth.isLoggedIn, true);
+  assert.strictEqual(loggedInGoogleAuth.accountName, 'YouTube用户');
+});
+
+test('Session Logic: Kuaishou login cookie identification', (t) => {
+  const loggedOut = analyzeLoginStatus('kuaishou', [
+    { name: 'did', value: 'web_guest_did' },
+    { name: 'kpn', value: 'KUAISHOU_VISION' },
+  ]);
+  assert.strictEqual(loggedOut.isLoggedIn, false);
+  assert.strictEqual(loggedOut.accountName, undefined);
+
+  const loggedInWithUid = analyzeLoginStatus('kuaishou', [
+    { name: 'did', value: 'web_did' },
+    { name: 'kuaishou.server.web_st', value: 'ticket_st_xyz' },
+    { name: 'userId', value: '987654321' },
+  ]);
+  assert.strictEqual(loggedInWithUid.isLoggedIn, true);
+  assert.strictEqual(loggedInWithUid.accountName, '快手用户: 987654321');
+
+  const loggedInPassToken = analyzeLoginStatus('kuaishou', [
+    { name: 'passToken', value: 'pass_token_xyz' },
+  ]);
+  assert.strictEqual(loggedInPassToken.isLoggedIn, true);
+  assert.strictEqual(loggedInPassToken.accountName, '快手会员');
 });

@@ -13,12 +13,16 @@ import {
   Copy,
   Loader2,
   AlertCircle,
+  Columns2,
+  Columns3,
+  LayoutGrid,
 } from 'lucide-react';
 import {
   PlatformId,
   PlatformConfig,
   NavigationState,
   PlatformSessionStatus,
+  LayoutMode,
 } from '../../types';
 
 interface TopNavProps {
@@ -39,6 +43,8 @@ interface TopNavProps {
   onMinimize: () => void;
   onMaximize: () => void;
   onClose: () => void;
+  layoutMode?: LayoutMode;
+  onToggleLayoutMode?: (mode: LayoutMode) => void;
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
@@ -59,13 +65,28 @@ export const TopNav: React.FC<TopNavProps> = ({
   onMinimize,
   onMaximize,
   onClose,
+  layoutMode = 'single',
+  onToggleLayoutMode,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const currentPlatform = platforms.find((p) => p.id === activePlatform);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleTriggerSearch = async () => {
+    const trimmed = searchQuery.trim();
+    if (!trimmed || isSubmitting) return;
+
+    try {
+      setIsSubmitting(true);
+      await onSearch(trimmed);
+    } finally {
+      setTimeout(() => setIsSubmitting(false), 300);
+    }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && searchQuery.trim()) {
-      onSearch(searchQuery.trim());
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleTriggerSearch();
     }
   };
 
@@ -288,17 +309,32 @@ export const TopNav: React.FC<TopNavProps> = ({
           transition: 'all var(--transition-fast)',
         }}
       >
-        {navState.isLoading ? (
-          <Loader2 size={14} className="spin-animation" color="var(--accent-primary)" />
-        ) : (
-          <Search size={14} color="var(--text-muted)" />
-        )}
+        <button
+          data-id="btn-search-trigger"
+          onClick={handleTriggerSearch}
+          disabled={isSubmitting || !searchQuery.trim()}
+          title="全平台统一搜索"
+          style={{
+            color: searchQuery.trim() ? 'var(--accent-primary)' : 'var(--text-muted)',
+            display: 'flex',
+            alignItems: 'center',
+            cursor: searchQuery.trim() ? 'pointer' : 'default',
+            padding: 0,
+          }}
+          className="hover-btn"
+        >
+          {navState.isLoading ? (
+            <Loader2 size={14} className="spin-animation" color="var(--accent-primary)" />
+          ) : (
+            <Search size={14} />
+          )}
+        </button>
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={`在${currentPlatform?.name || '平台'}搜索...`}
+          placeholder="全平台统一搜索 (Enter)..."
           style={{
             flex: 1,
             background: 'transparent',
@@ -317,6 +353,117 @@ export const TopNav: React.FC<TopNavProps> = ({
         )}
       </div>
 
+      {/* Layout Mode Toggle (Single, Split, Triple, Quad) */}
+      {onToggleLayoutMode && (
+        <div
+          className="no-drag"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            backgroundColor: 'var(--bg-surface)',
+            borderRadius: 'var(--radius-md)',
+            padding: '2px',
+            border: '1px solid var(--border-subtle)',
+            marginLeft: '6px',
+            marginRight: '6px',
+            gap: '2px',
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => onToggleLayoutMode('single')}
+            title="单平台全景模式"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3px',
+              padding: '4px 7px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: layoutMode === 'single' ? 'var(--bg-surface-active)' : 'transparent',
+              color: layoutMode === 'single' ? 'var(--accent-primary)' : 'var(--text-muted)',
+              fontWeight: layoutMode === 'single' ? 600 : 500,
+              fontSize: '11px',
+              border: layoutMode === 'single' ? '1px solid var(--accent-primary)' : '1px solid transparent',
+              cursor: 'pointer',
+            }}
+          >
+            <Square size={12} />
+            <span>单屏</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={platforms.length < 2}
+            onClick={() => onToggleLayoutMode('split')}
+            title={platforms.length < 2 ? '开启双屏需要至少启用 2 个平台' : '双平台左右分屏模式'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3px',
+              padding: '4px 7px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: layoutMode === 'split' ? 'var(--bg-surface-active)' : 'transparent',
+              color: layoutMode === 'split' ? 'var(--accent-primary)' : 'var(--text-muted)',
+              fontWeight: layoutMode === 'split' ? 600 : 500,
+              fontSize: '11px',
+              border: layoutMode === 'split' ? '1px solid var(--accent-primary)' : '1px solid transparent',
+              cursor: platforms.length < 2 ? 'not-allowed' : 'pointer',
+              opacity: platforms.length < 2 ? 0.4 : 1,
+            }}
+          >
+            <Columns2 size={12} />
+            <span>双屏</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={platforms.length < 3}
+            onClick={() => onToggleLayoutMode('triple')}
+            title={platforms.length < 3 ? '开启三屏需要至少启用 3 个平台' : '三平台工作台 (主视窗 + 侧边双窗)'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3px',
+              padding: '4px 7px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: layoutMode === 'triple' ? 'var(--bg-surface-active)' : 'transparent',
+              color: layoutMode === 'triple' ? 'var(--accent-primary)' : 'var(--text-muted)',
+              fontWeight: layoutMode === 'triple' ? 600 : 500,
+              fontSize: '11px',
+              border: layoutMode === 'triple' ? '1px solid var(--accent-primary)' : '1px solid transparent',
+              cursor: platforms.length < 3 ? 'not-allowed' : 'pointer',
+              opacity: platforms.length < 3 ? 0.4 : 1,
+            }}
+          >
+            <Columns3 size={12} />
+            <span>三屏</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={platforms.length < 4}
+            onClick={() => onToggleLayoutMode('quad')}
+            title={platforms.length < 4 ? '开启四屏需要至少启用 4 个平台' : '四平台聚合工作台 (四宫格矩阵)'}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '3px',
+              padding: '4px 7px',
+              borderRadius: 'var(--radius-sm)',
+              backgroundColor: layoutMode === 'quad' ? 'var(--bg-surface-active)' : 'transparent',
+              color: layoutMode === 'quad' ? 'var(--accent-primary)' : 'var(--text-muted)',
+              fontWeight: layoutMode === 'quad' ? 600 : 500,
+              fontSize: '11px',
+              border: layoutMode === 'quad' ? '1px solid var(--accent-primary)' : '1px solid transparent',
+              cursor: platforms.length < 4 ? 'not-allowed' : 'pointer',
+              opacity: platforms.length < 4 ? 0.4 : 1,
+            }}
+          >
+            <LayoutGrid size={12} />
+            <span>四屏</span>
+          </button>
+        </div>
+      )}
       {/* 6. Window Controls (Minimize, Maximize, Close) */}
       <div
         className="no-drag"

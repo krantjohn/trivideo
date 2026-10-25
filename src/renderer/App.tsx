@@ -5,6 +5,8 @@ import { CategoryBar } from './components/CategoryBar';
 import { FavoritesView } from './components/FavoritesView';
 import { HistoryView } from './components/HistoryView';
 import { SettingsModal } from './components/SettingsModal';
+import { OnboardingModal } from './components/OnboardingModal';
+import { SplitView } from './components/SplitView';
 import { triVideoService } from './services/api';
 import {
   PlatformId,
@@ -15,6 +17,10 @@ import {
   AppSettings,
   BookmarkItem,
   HistoryItem,
+  LayoutMode,
+  PaneId,
+  SplitConfig,
+  ContentBounds,
 } from '../types';
 
 export const App: React.FC = () => {
@@ -46,11 +52,24 @@ export const App: React.FC = () => {
     bilibili: { platform: 'bilibili', isLoggedIn: false, cookieCount: 0, lastChecked: Date.now() },
     douyin: { platform: 'douyin', isLoggedIn: false, cookieCount: 0, lastChecked: Date.now() },
     xiaohongshu: { platform: 'xiaohongshu', isLoggedIn: false, cookieCount: 0, lastChecked: Date.now() },
+    youtube: { platform: 'youtube', isLoggedIn: false, cookieCount: 0, lastChecked: Date.now() },
+    kuaishou: { platform: 'kuaishou', isLoggedIn: false, cookieCount: 0, lastChecked: Date.now() },
   });
 
   const [isMaximized, setIsMaximized] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>('single');
+  const [splitConfig, setSplitConfig] = useState<SplitConfig>({
+    mode: 'single',
+    leftPlatform: 'bilibili',
+    rightPlatform: 'youtube',
+    focusedPane: 'left',
+    splitRatio: 0.5,
+  });
 
   const viewportRef = useRef<HTMLDivElement>(null);
 
@@ -77,6 +96,9 @@ export const App: React.FC = () => {
           setSettings(loadedSettings);
           setTheme(loadedSettings.theme === 'light' ? 'light' : 'dark');
           setSidebarCollapsed(Boolean(loadedSettings.sidebarCollapsed));
+          if (loadedSettings.platformSetupCompleted === false) {
+            setIsWizardOpen(true);
+          }
           if (loadedSettings.lastPlatform) {
             setActivePlatform(loadedSettings.lastPlatform);
           }
@@ -89,6 +111,12 @@ export const App: React.FC = () => {
 
         const max = await triVideoService.isMaximized();
         setIsMaximized(max);
+
+        const loadedSplit = await triVideoService.getSplitConfig();
+        if (loadedSplit) {
+          setSplitConfig(loadedSplit);
+          setLayoutMode(loadedSplit.mode);
+        }
       } catch (err) {
         console.error('Initialization error:', err);
       }
@@ -108,9 +136,20 @@ export const App: React.FC = () => {
       setIsMaximized(max);
     });
 
+    const unsubFs = triVideoService.onFullscreenChange((fs: boolean) => {
+      setIsFullscreen(fs);
+    });
+
+    const unsubSplit = triVideoService.onSplitConfigChange((cfg) => {
+      setSplitConfig(cfg);
+      setLayoutMode(cfg.mode);
+    });
+
     return () => {
       unsubNav();
       unsubMax();
+      unsubFs();
+      unsubSplit();
     };
   }, []);
 
@@ -129,8 +168,26 @@ export const App: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Manage WebContentsView visibility when settings modal or wizard toggles
+  useEffect(() => {
+    triVideoService.setPlatformViewVisible(!isSettingsOpen && !isWizardOpen);
+  }, [isSettingsOpen, isWizardOpen]);
+
+  // Handle Escape key at app level when in fullscreen
+  useEffect(() => {
+    if (!isFullscreen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        triVideoService.exitFullscreen();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreen]);
+
   // Sync content bounds to WebContentsView whenever layout or viewport size changes
   const updateContentBounds = useCallback(() => {
+    if (isFullscreen) return;
     if (!viewportRef.current) return;
     const rect = viewportRef.current.getBoundingClientRect();
     triVideoService.setContentBounds({
@@ -139,7 +196,7 @@ export const App: React.FC = () => {
       width: rect.width,
       height: rect.height,
     });
-  }, []);
+  }, [isFullscreen]);
 
   useEffect(() => {
     updateContentBounds();
@@ -165,7 +222,104 @@ export const App: React.FC = () => {
   };
 
   // Actions
+  const handleToggleLayoutMode = async (mode: LayoutMode) => {
+    if (mode === 'split' && visiblePlatforms.length < 2) {
+      showToast('开启双屏至少需要启用两个平台，请在设置中启用更多平台');
+      return;
+    }
+    if (mode === 'triple' && visiblePlatforms.length < 3) {
+      showToast('开启三屏至少需要启用三个平台，请在设置中启用更多平台');
+      return;
+    }
+    if (mode === 'quad' && visiblePlatforms.length < 4) {
+      showToast('开启四屏至少需要启用四个平台，请在设置中启用更多平台');
+      return;
+    }
+    setLayoutMode(mode);
+    await triVideoService.setLayoutMode(mode);
+    const cfg = await triVideoService.getSplitConfig();
+    if (cfg) setSplitConfig(cfg);
+    setTimeout(updateContentBounds, 50);
+  };
+
+  const handleSplitSelectPlatform = async (pane: PaneId, platform: PlatformId) => {
+    const success = await triVideoService.setSplitPlatform(pane, platform);
+    if (success) {
+      const cfg = await triVideoService.getSplitConfig();
+      if (cfg) setSplitConfig(cfg);
+      setTimeout(updateContentBounds, 50);
+    } else {
+      showToast('该平台已在其他面板展示或不可用');
+    }
+  };
+
+  const handleSetFocusPane = async (pane: PaneId) => {
+    setSplitConfig((prev) => ({
+      ...prev,
+      focusedPane: pane,
+      focusedPaneId: pane,
+    }));
+    await triVideoService.setFocusedPane(pane);
+  };
+
+  const handleSplitRatioChange = (ratio: number) => {
+    setSplitConfig((prev) => ({ ...prev, splitRatio: ratio }));
+  };
+
+  const handleHorizontalRatioChange = (ratio: number) => {
+    setSplitConfig((prev) => ({ ...prev, horizontalRatio: ratio }));
+  };
+
+  const handleSplitBoundsChange = useCallback(
+    (bounds: { left: ContentBounds; right: ContentBounds }) => {
+      if (isFullscreen) return;
+      triVideoService.setSplitBounds(bounds);
+    },
+    [isFullscreen]
+  );
+
+  const handleMultiBoundsChange = useCallback(
+    (bounds: Record<string, ContentBounds>) => {
+      if (isFullscreen) return;
+      triVideoService.setMultiPaneBounds(bounds);
+    },
+    [isFullscreen]
+  );
+
+  const handleReloadPane = () => {
+    triVideoService.reload();
+  };
+
+  const handleGoHomePane = (pane: PaneId) => {
+    const targetPane = splitConfig.panes?.find((p) => p.id === pane);
+    let targetPlatform = targetPane?.platform;
+    if (!targetPlatform) {
+      targetPlatform = pane === 'left' ? splitConfig.leftPlatform : splitConfig.rightPlatform;
+    }
+    const cfg = platforms.find((p) => p.id === targetPlatform);
+    if (cfg) {
+      triVideoService.navigate(cfg.homeUrl);
+    }
+  };
+
   const handleSelectPlatform = async (p: PlatformId) => {
+    if (layoutMode !== 'single') {
+      const visible = splitConfig.panes || [
+        { id: 'pane-1', platform: splitConfig.leftPlatform },
+        { id: 'pane-2', platform: splitConfig.rightPlatform },
+      ];
+      const existing = visible.find((item) => item.platform === p);
+      if (existing) {
+        handleSetFocusPane(existing.id as PaneId);
+        showToast(`已将焦点切换至「${platforms.find((item) => item.id === p)?.name}」`);
+        return;
+      }
+      // Replace platform on currently focused pane
+      const currentPaneId = splitConfig.focusedPaneId || splitConfig.focusedPane || 'pane-1';
+      await handleSplitSelectPlatform(currentPaneId as PaneId, p);
+      return;
+    }
+
     setActivePlatform(p);
     setViewMode('platform');
     await triVideoService.switchPlatform(p);
@@ -198,16 +352,30 @@ export const App: React.FC = () => {
     triVideoService.navigate(url);
   };
 
-  const handleSearch = (query: string) => {
-    const config = platforms.find((p) => p.id === activePlatform);
-    if (!config) return;
+  const handleSearch = async (query: string) => {
+    const trimmed = query.trim();
+    if (!trimmed) return;
 
-    setViewMode('platform');
-    triVideoService.setViewMode('platform');
+    if (viewMode !== 'platform') {
+      setViewMode('platform');
+      await triVideoService.setViewMode('platform');
+    }
 
-    const searchUrl = config.searchUrlTemplate.replace('{query}', encodeURIComponent(query));
-    triVideoService.navigate(searchUrl);
-    showToast(`正在在${config.name}搜索：「${query}」`);
+    try {
+      const result = await triVideoService.searchAll(trimmed);
+      if (result && result.submittedPlatforms.length > 0) {
+        if (result.failedPlatforms.length === 0) {
+          showToast(`已向 ${result.submittedPlatforms.length} 个平台提交搜索：「${result.query}」`);
+        } else {
+          showToast(`已向 ${result.submittedPlatforms.length} 个平台提交搜索，${result.failedPlatforms.length} 个平台异常`);
+        }
+      } else {
+        showToast('搜索提交未完成，请检查关键词或网络');
+      }
+    } catch (err) {
+      console.error('Failed to execute batch search:', err);
+      showToast('搜索提交失败，请重试');
+    }
   };
 
   const handleBookmarkCurrent = async () => {
@@ -233,7 +401,19 @@ export const App: React.FC = () => {
     }
   };
 
+  const enabledPlatformIds = settings.enabledPlatformIds && settings.enabledPlatformIds.length > 0
+    ? settings.enabledPlatformIds
+    : ['bilibili', 'douyin', 'xiaohongshu', 'youtube', 'kuaishou'];
+
+  const visiblePlatforms = platforms.filter((p) => enabledPlatformIds.includes(p.id));
+
   const handlePlayBookmarkItem = (item: BookmarkItem) => {
+    if (!enabledPlatformIds.includes(item.platform)) {
+      const cfg = platforms.find((p) => p.id === item.platform);
+      const name = cfg ? cfg.name : item.platform;
+      showToast(`平台「${name}」当前已禁用，请在设置中重新启用后再访问`);
+      return;
+    }
     setActivePlatform(item.platform);
     setViewMode('platform');
     triVideoService.switchPlatform(item.platform);
@@ -248,11 +428,49 @@ export const App: React.FC = () => {
   };
 
   const handlePlayHistoryItem = (item: HistoryItem) => {
+    if (!enabledPlatformIds.includes(item.platform)) {
+      const cfg = platforms.find((p) => p.id === item.platform);
+      const name = cfg ? cfg.name : item.platform;
+      showToast(`平台「${name}」当前已禁用，请在设置中重新启用后再访问`);
+      return;
+    }
     setActivePlatform(item.platform);
     setViewMode('platform');
     triVideoService.switchPlatform(item.platform);
     triVideoService.setViewMode('platform');
     triVideoService.navigate(item.url);
+  };
+
+  const handleCompleteWizard = async (selectedPlatformIds: PlatformId[]) => {
+    const nextLast = selectedPlatformIds.includes(activePlatform)
+      ? activePlatform
+      : selectedPlatformIds[0];
+    const updated: Partial<AppSettings> = {
+      platformSetupCompleted: true,
+      enabledPlatformIds: selectedPlatformIds,
+      lastPlatform: nextLast,
+    };
+    setSettings((prev) => ({ ...prev, ...updated }));
+    setActivePlatform(nextLast);
+    setIsWizardOpen(false);
+    await triVideoService.updateSettings(updated);
+    await triVideoService.switchPlatform(nextLast);
+    setTimeout(updateContentBounds, 50);
+    showToast(`设置完成！已启用 ${selectedPlatformIds.length} 个视频平台`);
+  };
+
+  const handleUpdateSettings = (updated: Partial<AppSettings>) => {
+    setSettings((prev) => {
+      const next = { ...prev, ...updated };
+      if (updated.enabledPlatformIds && updated.enabledPlatformIds.length > 0) {
+        if (!updated.enabledPlatformIds.includes(activePlatform)) {
+          handleSelectPlatform(updated.enabledPlatformIds[0]);
+        }
+      }
+      return next;
+    });
+    if (updated.theme) setTheme(updated.theme === 'light' ? 'light' : 'dark');
+    triVideoService.updateSettings(updated);
   };
 
   const handleRemoveHistoryItem = async (id: string) => {
@@ -289,7 +507,7 @@ export const App: React.FC = () => {
       <Sidebar
         collapsed={sidebarCollapsed}
         onToggleCollapse={handleToggleCollapse}
-        platforms={platforms}
+        platforms={visiblePlatforms}
         activePlatform={activePlatform}
         onSelectPlatform={handleSelectPlatform}
         viewMode={viewMode}
@@ -306,7 +524,7 @@ export const App: React.FC = () => {
       <div className="main-column">
         {/* Top Platform and Navigation Bar */}
         <TopNav
-          platforms={platforms}
+          platforms={visiblePlatforms}
           activePlatform={activePlatform}
           onSelectPlatform={handleSelectPlatform}
           navState={navState}
@@ -323,10 +541,12 @@ export const App: React.FC = () => {
           onMinimize={() => triVideoService.minimizeWindow()}
           onMaximize={() => triVideoService.maximizeWindow()}
           onClose={() => triVideoService.closeWindow()}
+          layoutMode={layoutMode}
+          onToggleLayoutMode={handleToggleLayoutMode}
         />
 
-        {/* Category & Channel Bar */}
-        {currentPlatformConfig && (
+        {/* Category & Channel Bar (only in single platform mode) */}
+        {currentPlatformConfig && layoutMode === 'single' && (
           <CategoryBar
             currentPlatform={currentPlatformConfig}
             onSelectCategory={handleCategorySelect}
@@ -365,6 +585,28 @@ export const App: React.FC = () => {
 
         {/* Content Viewport */}
         <div ref={viewportRef} className="content-viewport">
+          {viewMode === 'platform' && layoutMode !== 'single' && (
+            <SplitView
+              layoutMode={layoutMode}
+              splitConfig={splitConfig}
+              leftPlatform={splitConfig.leftPlatform}
+              rightPlatform={splitConfig.rightPlatform}
+              focusedPane={splitConfig.focusedPane}
+              splitRatio={splitConfig.splitRatio}
+              horizontalRatio={splitConfig.horizontalRatio}
+              platforms={visiblePlatforms}
+              onSetFocus={handleSetFocusPane}
+              onSelectPlatform={handleSplitSelectPlatform}
+              onRatioChange={handleSplitRatioChange}
+              onVerticalRatioChange={handleSplitRatioChange}
+              onHorizontalRatioChange={handleHorizontalRatioChange}
+              onBoundsChange={handleSplitBoundsChange}
+              onMultiBoundsChange={handleMultiBoundsChange}
+              onReloadPane={handleReloadPane}
+              onGoHomePane={handleGoHomePane}
+            />
+          )}
+
           {viewMode === 'favorites' && (
             <FavoritesView
               bookmarks={bookmarks}
@@ -389,14 +631,17 @@ export const App: React.FC = () => {
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         settings={settings}
-        onUpdateSettings={(updated) => {
-          setSettings((prev) => ({ ...prev, ...updated }));
-          if (updated.theme) setTheme(updated.theme === 'light' ? 'light' : 'dark');
-          triVideoService.updateSettings(updated);
-        }}
+        onUpdateSettings={handleUpdateSettings}
         sessionStatuses={sessionStatuses}
         onClearSession={handleClearSession}
         onClearAllCache={handleClearAllCache}
+      />
+
+      {/* First-launch Setup Wizard */}
+      <OnboardingModal
+        isOpen={isWizardOpen}
+        platforms={platforms}
+        onComplete={handleCompleteWizard}
       />
     </div>
   );

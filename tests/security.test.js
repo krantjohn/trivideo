@@ -32,11 +32,20 @@ test('Security Domain Routing: Strict domain whitelist & anti-spoofing', (t) => 
   assert.strictEqual(isUrlAllowedForPlatform('https://www.douyin.com/hot', 'douyin'), true);
   assert.strictEqual(isUrlAllowedForPlatform('https://passport.bytedance.com/login', 'douyin'), true);
   assert.strictEqual(isUrlAllowedForPlatform('https://www.xiaohongshu.com/explore', 'xiaohongshu'), true);
+  assert.strictEqual(isUrlAllowedForPlatform('https://www.youtube.com/watch?v=abc', 'youtube'), true);
+  assert.strictEqual(isUrlAllowedForPlatform('https://accounts.google.com/ServiceLogin', 'youtube'), true);
+  assert.strictEqual(isUrlAllowedForPlatform('https://www.kuaishou.com/new-reco', 'kuaishou'), true);
+  assert.strictEqual(isUrlAllowedForPlatform('https://live.kuaishou.com/u/123', 'kuaishou'), true);
+  assert.strictEqual(isUrlAllowedForPlatform('https://p2.a.yximgs.com/test.jpg', 'kuaishou'), true);
 
   // 2. Strict Cross-Platform Isolation (Douyin link must NOT be allowed inside Bilibili view)
   assert.strictEqual(isUrlAllowedForPlatform('https://www.douyin.com/video/123', 'bilibili'), false);
   assert.strictEqual(isUrlAllowedForPlatform('https://www.bilibili.com/video/123', 'douyin'), false);
   assert.strictEqual(isUrlAllowedForPlatform('https://www.xiaohongshu.com/explore', 'douyin'), false);
+  assert.strictEqual(isUrlAllowedForPlatform('https://www.youtube.com/watch?v=123', 'bilibili'), false);
+  assert.strictEqual(isUrlAllowedForPlatform('https://www.bilibili.com/video/123', 'youtube'), false);
+  assert.strictEqual(isUrlAllowedForPlatform('https://www.kuaishou.com/video/123', 'bilibili'), false);
+  assert.strictEqual(isUrlAllowedForPlatform('https://www.bilibili.com/video/123', 'kuaishou'), false);
 
   // 3. Subdomain Spoofing & Phishing Attack Rejection (Critical security check)
   assert.strictEqual(isUrlAllowedForPlatform('https://attacker-bilibili.com', 'bilibili'), false);
@@ -51,6 +60,15 @@ test('Security Domain Routing: Strict domain whitelist & anti-spoofing', (t) => 
   assert.strictEqual(isUrlAllowedForPlatform('https://attacker-b23.tv', 'bilibili'), false);
   assert.strictEqual(isUrlAllowedForPlatform('https://b23.tv.evil.com', 'bilibili'), false);
   assert.strictEqual(isUrlAllowedForPlatform('https://xhslink.com.phishing.cn', 'xiaohongshu'), false);
+  assert.strictEqual(isUrlAllowedForPlatform('https://youtu.be/xyz123', 'youtube'), true);
+  assert.strictEqual(isUrlAllowedForPlatform('https://attacker-youtu.be', 'youtube'), false);
+  assert.strictEqual(isUrlAllowedForPlatform('https://fake-youtube.com', 'youtube'), false);
+  assert.strictEqual(isUrlAllowedForPlatform('https://youtube.com.attacker.com', 'youtube'), false);
+  assert.strictEqual(isUrlAllowedForPlatform('https://v.kuaishou.com/xyz123', 'kuaishou'), true);
+  assert.strictEqual(isUrlAllowedForPlatform('https://attacker-kuaishou.com', 'kuaishou'), false);
+  assert.strictEqual(isUrlAllowedForPlatform('https://v.kuaishou.com.evil.com', 'kuaishou'), false);
+  assert.strictEqual(isUrlAllowedForPlatform('https://fake-kuaishou.com', 'kuaishou'), false);
+  assert.strictEqual(isUrlAllowedForPlatform('https://kuaishou.com.attacker.com', 'kuaishou'), false);
 });
 
 test('Security Domain Routing: Multi-platform link router detection', (t) => {
@@ -60,6 +78,10 @@ test('Security Domain Routing: Multi-platform link router detection', (t) => {
   assert.strictEqual(getPlatformForUrl('https://v.douyin.com/abc456'), 'douyin');
   assert.strictEqual(getPlatformForUrl('https://www.xiaohongshu.com/explore'), 'xiaohongshu');
   assert.strictEqual(getPlatformForUrl('https://xhslink.com/m/xyz'), 'xiaohongshu');
+  assert.strictEqual(getPlatformForUrl('https://www.youtube.com/watch?v=123'), 'youtube');
+  assert.strictEqual(getPlatformForUrl('https://youtu.be/123'), 'youtube');
+  assert.strictEqual(getPlatformForUrl('https://www.kuaishou.com/new-reco'), 'kuaishou');
+  assert.strictEqual(getPlatformForUrl('https://v.kuaishou.com/abc'), 'kuaishou');
   assert.strictEqual(getPlatformForUrl('https://www.baidu.com'), null);
   assert.strictEqual(getPlatformForUrl('https://attacker-bilibili.com'), null);
 });

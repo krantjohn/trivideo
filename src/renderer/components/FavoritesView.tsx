@@ -87,9 +87,19 @@ export const FavoritesView: React.FC<FavoritesViewProps> = ({
               border: '1px solid var(--border-subtle)',
             }}
           >
-            {(['all', 'bilibili', 'douyin', 'xiaohongshu'] as const).map((p) => {
+            {(['all', 'bilibili', 'douyin', 'xiaohongshu', 'youtube', 'kuaishou'] as const).map((p) => {
               const label =
-                p === 'all' ? '全部' : p === 'bilibili' ? 'B站' : p === 'douyin' ? '抖音' : '小红书';
+                p === 'all'
+                  ? '全部'
+                  : p === 'bilibili'
+                  ? 'B站'
+                  : p === 'douyin'
+                  ? '抖音'
+                  : p === 'xiaohongshu'
+                  ? '小红书'
+                  : p === 'youtube'
+                  ? 'YouTube'
+                  : '快手';
               const active = platformFilter === p;
               return (
                 <button

@@ -2,13 +2,13 @@ const test = require('node:test');
 const assert = require('node:assert');
 const { PLATFORM_CONFIGS } = require('../dist/main/platform-config.js');
 
-test('Platform Configs: All 3 platforms are configured correctly', (t) => {
+test('Platform Configs: All 5 platforms are configured correctly', (t) => {
   const platforms = Object.keys(PLATFORM_CONFIGS);
-  assert.deepStrictEqual(platforms.sort(), ['bilibili', 'douyin', 'xiaohongshu'].sort());
+  assert.deepStrictEqual(platforms.sort(), ['bilibili', 'douyin', 'kuaishou', 'xiaohongshu', 'youtube'].sort());
 
   for (const [id, config] of Object.entries(PLATFORM_CONFIGS)) {
     assert.strictEqual(config.id, id);
-    assert.ok(config.name.length > 0, `Platform ${id} must have a Chinese display name`);
+    assert.ok(config.name.length > 0, `Platform ${id} must have a display name`);
     assert.ok(config.brandColor.startsWith('#'), `Platform ${id} brandColor must be hex`);
     assert.ok(config.homeUrl.startsWith('https://'), `Platform ${id} homeUrl must be HTTPS`);
     assert.ok(config.searchUrlTemplate.includes('{query}'), `Platform ${id} searchUrlTemplate must include {query}`);
@@ -32,4 +32,10 @@ test('Platform Configs: Search URL templates generate valid queries', (t) => {
 
   const xhsSearch = PLATFORM_CONFIGS.xiaohongshu.searchUrlTemplate.replace('{query}', encodeURIComponent('穿搭'));
   assert.strictEqual(xhsSearch, 'https://www.xiaohongshu.com/search_result?keyword=%E7%A9%BF%E6%90%AD');
+
+  const ytSearch = PLATFORM_CONFIGS.youtube.searchUrlTemplate.replace('{query}', encodeURIComponent('科技'));
+  assert.strictEqual(ytSearch, 'https://www.youtube.com/results?search_query=%E7%A7%91%E6%8A%80');
+
+  const ksSearch = PLATFORM_CONFIGS.kuaishou.searchUrlTemplate.replace('{query}', encodeURIComponent('日常'));
+  assert.strictEqual(ksSearch, 'https://www.kuaishou.com/search/video?searchKey=%E6%97%A5%E5%B8%B8');
 });

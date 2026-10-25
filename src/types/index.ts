@@ -1,4 +1,4 @@
-export type PlatformId = 'douyin' | 'bilibili' | 'xiaohongshu';
+export type PlatformId = 'douyin' | 'bilibili' | 'xiaohongshu' | 'youtube' | 'kuaishou';
 
 export interface PlatformCategory {
   id: string;
@@ -23,6 +23,31 @@ export interface PlatformConfig {
 }
 
 export type ViewMode = 'platform' | 'favorites' | 'history' | 'settings';
+
+export type LayoutMode = 'single' | 'split' | 'triple' | 'quad';
+export type PaneId = string;
+
+export interface PaneInfo {
+  id: string; // 'pane-1', 'pane-2', etc. (or 'left', 'right')
+  platform: PlatformId;
+}
+
+export interface SplitConfig {
+  mode: LayoutMode;
+  leftPlatform: PlatformId;
+  rightPlatform: PlatformId;
+  focusedPane: PaneId;
+  splitRatio: number; // between 0.25 and 0.75, default 0.5
+  panes?: PaneInfo[];
+  focusedPaneId?: string;
+  horizontalRatio?: number; // between 0.25 and 0.75, default 0.5
+}
+
+export interface SplitBounds {
+  left: ContentBounds;
+  right: ContentBounds;
+  paneBounds?: Record<string, ContentBounds>;
+}
 
 export interface BookmarkItem {
   id: string;
@@ -57,6 +82,9 @@ export interface AppSettings {
   userAgentType: 'default' | 'chrome' | 'edge';
   customUserAgent?: string;
   muteOnBackground?: boolean;
+  enabledPlatformIds?: PlatformId[];
+  platformSetupCompleted?: boolean;
+  splitConfig?: SplitConfig;
 }
 
 export interface NavigationState {
@@ -85,6 +113,13 @@ export interface TriVideoStorageData {
   settings: AppSettings;
 }
 
+export interface BatchSearchResult {
+  query: string;
+  totalPlatforms: number;
+  submittedPlatforms: PlatformId[];
+  failedPlatforms: { platform: PlatformId; reason: string }[];
+}
+
 export interface ContentBounds {
   x: number;
   y: number;
@@ -99,6 +134,19 @@ export interface ElectronAPI {
   getActivePlatform: () => Promise<PlatformId>;
   setContentBounds: (bounds: ContentBounds) => Promise<void>;
   setViewMode: (mode: ViewMode) => Promise<void>;
+  setPlatformViewVisible: (visible: boolean) => Promise<void>;
+  searchAll: (query: string) => Promise<BatchSearchResult>;
+
+  // Split-Screen Layout Management
+  setLayoutMode: (mode: LayoutMode) => Promise<boolean>;
+  getLayoutMode: () => Promise<LayoutMode>;
+  getSplitConfig: () => Promise<SplitConfig>;
+  setSplitPlatform: (pane: PaneId, platform: PlatformId) => Promise<boolean>;
+  setPanePlatform: (paneId: string, platform: PlatformId) => Promise<boolean>;
+  setFocusedPane: (pane: PaneId) => Promise<void>;
+  setSplitBounds: (bounds: SplitBounds) => Promise<void>;
+  setMultiPaneBounds: (bounds: Record<string, ContentBounds>) => Promise<void>;
+  onSplitConfigChange: (callback: (config: SplitConfig) => void) => () => void;
 
   // Navigation
   navigate: (url: string) => Promise<void>;
@@ -143,6 +191,9 @@ export interface ElectronAPI {
   closeWindow: () => Promise<void>;
   isMaximized: () => Promise<boolean>;
   onMaximizeChange: (callback: (isMax: boolean) => void) => () => void;
+  exitFullscreen: () => Promise<void>;
+  isFullscreen: () => Promise<boolean>;
+  onFullscreenChange: (callback: (isFs: boolean) => void) => () => void;
 }
 
 declare global {

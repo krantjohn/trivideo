@@ -9,10 +9,10 @@ files:
   - package.json
 win:
   target:
-    - target: portable
+    - target: nsis
       arch:
         - x64
-    - target: nsis
+    - target: portable
       arch:
         - x64
   icon: resources/icon.ico
@@ -23,5 +23,7 @@ nsis:
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: 三栖视频中心
+  deleteAppDataOnUninstall: false
+  artifactName: ${productName}-Setup-${version}.${ext}
 portable:
-  artifactName: ${productName}-${version}-Portable.${ext}
+  artifactName: ${productName}-Portable-${version}.${ext}

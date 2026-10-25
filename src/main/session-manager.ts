@@ -1,5 +1,6 @@
 import { session, Session } from 'electron';
 import { PlatformId, PlatformSessionStatus } from '../types';
+import { PLATFORM_CONFIGS } from './platform-config';
 
 const CHROME_USER_AGENT =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36';
@@ -12,7 +13,7 @@ export class SessionManager {
   }
 
   private initSessions(): void {
-    const platforms: PlatformId[] = ['douyin', 'bilibili', 'xiaohongshu'];
+    const platforms = Object.keys(PLATFORM_CONFIGS) as PlatformId[];
 
     for (const p of platforms) {
       const partitionName = `persist:${p}`;
@@ -80,6 +81,23 @@ export class SessionManager {
         if (userId) {
           accountName = '小红书会员';
         }
+      } else if (platform === 'youtube') {
+        const loginCookie = cookies.find(
+          (c) => c.name === 'LOGIN_INFO' || c.name === 'SAPISID' || c.name === '__Secure-3PSID' || c.name === 'SID'
+        );
+        isLoggedIn = Boolean(loginCookie && loginCookie.value);
+        if (isLoggedIn) {
+          accountName = 'YouTube用户';
+        }
+      } else if (platform === 'kuaishou') {
+        const webSt = cookies.find((c) => c.name === 'kuaishou.server.web_st' || c.name === 'passToken');
+        const userId = cookies.find((c) => c.name === 'userId');
+        isLoggedIn = Boolean(webSt && webSt.value);
+        if (userId && userId.value) {
+          accountName = `快手用户: ${userId.value}`;
+        } else if (isLoggedIn) {
+          accountName = '快手会员';
+        }
       }
 
       return {
@@ -101,13 +119,13 @@ export class SessionManager {
   }
 
   public async getAllSessionStatuses(): Promise<Record<PlatformId, PlatformSessionStatus>> {
-    const platforms: PlatformId[] = ['douyin', 'bilibili', 'xiaohongshu'];
+    const platforms = Object.keys(PLATFORM_CONFIGS) as PlatformId[];
     const results = await Promise.all(platforms.map((p) => this.getSessionStatus(p)));
-    return {
-      douyin: results[0],
-      bilibili: results[1],
-      xiaohongshu: results[2],
-    };
+    const statuses = {} as Record<PlatformId, PlatformSessionStatus>;
+    platforms.forEach((p, idx) => {
+      statuses[p] = results[idx];
+    });
+    return statuses;
   }
 
   public async clearSession(platform: PlatformId): Promise<void> {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Play, Trash2, ExternalLink, Flame, Tv, Sparkles, Eye } from 'lucide-react';
+import { Play, Trash2, ExternalLink, Flame, Tv, Sparkles, Eye, Youtube, Video } from 'lucide-react';
 import { BookmarkItem, PlatformId } from '../../types';
 import { triVideoService } from '../services/api';
 
@@ -73,6 +73,44 @@ export const VideoGrid: React.FC<VideoGridProps> = ({
           >
             <Sparkles size={12} />
             <span>小红书</span>
+          </span>
+        );
+      case 'youtube':
+        return (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '2px 8px',
+              borderRadius: 'var(--radius-xs)',
+              backgroundColor: 'rgba(255, 0, 0, 0.15)',
+              color: '#FF0000',
+              fontSize: '11px',
+              fontWeight: 600,
+            }}
+          >
+            <Youtube size={12} />
+            <span>YouTube</span>
+          </span>
+        );
+      case 'kuaishou':
+        return (
+          <span
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '2px 8px',
+              borderRadius: 'var(--radius-xs)',
+              backgroundColor: 'rgba(255, 119, 0, 0.15)',
+              color: '#FF7700',
+              fontSize: '11px',
+              fontWeight: 600,
+            }}
+          >
+            <Video size={12} />
+            <span>快手</span>
           </span>
         );
     }

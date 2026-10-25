@@ -3,7 +3,25 @@ import { PlatformManager } from './platform-manager';
 import { SessionManager } from './session-manager';
 import { StorageManager } from './storage';
 import { PLATFORM_CONFIGS } from './platform-config';
-import { PlatformId, ViewMode, ContentBounds, AppSettings, BookmarkItem } from '../types';
+import {
+
+  PlatformId,
+
+  ViewMode,
+
+  ContentBounds,
+
+  AppSettings,
+
+  BookmarkItem,
+
+  LayoutMode,
+
+  PaneId,
+
+  SplitBounds,
+
+} from '../types';
 
 export function registerIpcHandlers(
   mainWindow: BrowserWindow,
@@ -30,6 +48,47 @@ export function registerIpcHandlers(
 
   ipcMain.handle('platform:setViewMode', async (_, mode: ViewMode) => {
     platformManager.setViewMode(mode);
+  });
+
+  ipcMain.handle('platform:setVisible', async (_, visible: boolean) => {
+    platformManager.setPlatformViewVisible(visible);
+  });
+
+  ipcMain.handle('platform:searchAll', async (_, query: string) => {
+    return platformManager.searchAllPlatforms(query);
+  });
+
+  // Split-Screen Layout Management
+  ipcMain.handle('layout:setMode', async (_, mode: LayoutMode) => {
+    return platformManager.setLayoutMode(mode);
+  });
+
+  ipcMain.handle('layout:getMode', async () => {
+    return platformManager.getLayoutMode();
+  });
+
+  ipcMain.handle('split:getConfig', async () => {
+    return platformManager.getSplitConfig();
+  });
+
+  ipcMain.handle('split:setPlatform', async (_, pane: PaneId, platform: PlatformId) => {
+    return platformManager.setSplitPlatform(pane, platform);
+  });
+
+  ipcMain.handle('split:setPanePlatform', async (_, paneId: string, platform: PlatformId) => {
+    return platformManager.setPanePlatform(paneId, platform);
+  });
+
+  ipcMain.handle('split:setFocus', async (_, pane: PaneId) => {
+    platformManager.setFocusedPane(pane);
+  });
+
+  ipcMain.handle('split:setBounds', async (_, bounds: SplitBounds) => {
+    platformManager.setSplitBounds(bounds);
+  });
+
+  ipcMain.handle('split:setMultiBounds', async (_, bounds: Record<string, ContentBounds>) => {
+    platformManager.setMultiPaneBounds(bounds);
   });
 
   // Navigation
@@ -122,6 +181,9 @@ export function registerIpcHandlers(
 
   ipcMain.handle('storage:updateSettings', async (_, partial: Partial<AppSettings>) => {
     const updated = storageManager.updateSettings(partial);
+    if (updated.enabledPlatformIds) {
+      platformManager.updateEnabledPlatforms(updated.enabledPlatformIds);
+    }
     return updated;
   });
 
@@ -131,6 +193,10 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle('window:maximize', async () => {
+    if (platformManager.getIsFullscreen()) {
+      platformManager.exitFullScreen();
+      return;
+    }
     if (mainWindow.isMaximized()) {
       mainWindow.unmaximize();
     } else {
@@ -143,7 +209,18 @@ export function registerIpcHandlers(
   });
 
   ipcMain.handle('window:isMaximized', async () => {
+    if (platformManager.getIsFullscreen()) {
+      return platformManager.getWasMaximizedBeforeFullscreen();
+    }
     return mainWindow.isMaximized();
+  });
+
+  ipcMain.handle('window:exitFullscreen', async () => {
+    platformManager.exitFullScreen();
+  });
+
+  ipcMain.handle('window:isFullscreen', async () => {
+    return platformManager.getIsFullscreen();
   });
 
   // Setup Push Listeners
@@ -153,16 +230,26 @@ export function registerIpcHandlers(
     }
   });
 
+  platformManager.setFullscreenChangeCallback((isFullscreen) => {
+    if (!mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('window:fullscreenChanged', isFullscreen);
+    }
+  });
+
   mainWindow.on('maximize', () => {
     if (!mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('window:maximizeChanged', true);
+      if (!platformManager.getIsFullscreen()) {
+        mainWindow.webContents.send('window:maximizeChanged', true);
+      }
       platformManager.updateViewPlacement();
     }
   });
 
   mainWindow.on('unmaximize', () => {
     if (!mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('window:maximizeChanged', false);
+      if (!platformManager.getIsFullscreen()) {
+        mainWindow.webContents.send('window:maximizeChanged', false);
+      }
       platformManager.updateViewPlacement();
     }
   });

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { History, Search, Trash2, ExternalLink, Play, Tv, Flame, Sparkles } from 'lucide-react';
+import { History, Search, Trash2, ExternalLink, Play, Tv, Flame, Sparkles, Youtube, Video } from 'lucide-react';
 import { HistoryItem, PlatformId } from '../../types';
 import { triVideoService } from '../services/api';
 
@@ -53,6 +53,10 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
         return <Flame size={14} color="#FE2C55" />;
       case 'xiaohongshu':
         return <Sparkles size={14} color="#FF2442" />;
+      case 'youtube':
+        return <Youtube size={14} color="#FF0000" />;
+      case 'kuaishou':
+        return <Video size={14} color="#FF7700" />;
     }
   };
 
@@ -115,9 +119,19 @@ export const HistoryView: React.FC<HistoryViewProps> = ({
               border: '1px solid var(--border-subtle)',
             }}
           >
-            {(['all', 'bilibili', 'douyin', 'xiaohongshu'] as const).map((p) => {
+            {(['all', 'bilibili', 'douyin', 'xiaohongshu', 'youtube', 'kuaishou'] as const).map((p) => {
               const label =
-                p === 'all' ? '全部' : p === 'bilibili' ? 'B站' : p === 'douyin' ? '抖音' : '小红书';
+                p === 'all'
+                  ? '全部'
+                  : p === 'bilibili'
+                  ? 'B站'
+                  : p === 'douyin'
+                  ? '抖音'
+                  : p === 'xiaohongshu'
+                  ? '小红书'
+                  : p === 'youtube'
+                  ? 'YouTube'
+                  : '快手';
               const active = platformFilter === p;
               return (
                 <button

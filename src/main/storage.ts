@@ -9,6 +9,8 @@ import {
   PlatformId,
 } from '../types';
 
+export const ALL_PLATFORM_IDS: PlatformId[] = ['bilibili', 'douyin', 'xiaohongshu', 'youtube', 'kuaishou'];
+
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   lastPlatform: 'bilibili',
@@ -17,6 +19,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   clearCacheOnExit: false,
   userAgentType: 'chrome',
   muteOnBackground: false,
+  enabledPlatformIds: [...ALL_PLATFORM_IDS],
+  platformSetupCompleted: false,
 };
 
 export class StorageManager {
@@ -33,15 +37,45 @@ export class StorageManager {
     this.data = this.loadData();
   }
 
+  public sanitizeEnabledPlatforms(platforms?: any): PlatformId[] {
+    if (!Array.isArray(platforms)) {
+      return [...ALL_PLATFORM_IDS];
+    }
+    const valid = platforms.filter((p): p is PlatformId => ALL_PLATFORM_IDS.includes(p));
+    return valid.length > 0 ? valid : [...ALL_PLATFORM_IDS];
+  }
+
   private loadData(): TriVideoStorageData {
     try {
       if (fs.existsSync(this.filePath)) {
         const raw = fs.readFileSync(this.filePath, 'utf-8');
         const parsed = JSON.parse(raw);
+        const parsedSettings = parsed.settings || {};
+
+        // Existing user migration check:
+        // If file exists and platformSetupCompleted is undefined, existing user -> mark completed = true
+        const platformSetupCompleted =
+          typeof parsedSettings.platformSetupCompleted === 'boolean'
+            ? parsedSettings.platformSetupCompleted
+            : true;
+
+        const enabledPlatformIds = this.sanitizeEnabledPlatforms(parsedSettings.enabledPlatformIds);
+
+        let lastPlatform: PlatformId = parsedSettings.lastPlatform || DEFAULT_SETTINGS.lastPlatform;
+        if (!enabledPlatformIds.includes(lastPlatform)) {
+          lastPlatform = enabledPlatformIds[0];
+        }
+
         return {
           bookmarks: Array.isArray(parsed.bookmarks) ? parsed.bookmarks : [],
           history: Array.isArray(parsed.history) ? parsed.history : [],
-          settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
+          settings: {
+            ...DEFAULT_SETTINGS,
+            ...parsedSettings,
+            platformSetupCompleted,
+            enabledPlatformIds,
+            lastPlatform,
+          },
         };
       }
     } catch (err) {
@@ -50,7 +84,11 @@ export class StorageManager {
     return {
       bookmarks: this.getDefaultBookmarks(),
       history: [],
-      settings: DEFAULT_SETTINGS,
+      settings: {
+        ...DEFAULT_SETTINGS,
+        enabledPlatformIds: [...ALL_PLATFORM_IDS],
+        platformSetupCompleted: false,
+      },
     };
   }
 
@@ -88,6 +126,28 @@ export class StorageManager {
         createdAt: Date.now() - 86400000 * 0.5,
         notes: '优质生活方式分享与前沿灵感发现',
         category: '探索发现',
+      },
+      {
+        id: 'bm-yt-portal-1',
+        platform: 'youtube',
+        title: 'YouTube · 热门内容',
+        url: 'https://www.youtube.com/feed/trending',
+        author: 'YouTube',
+        duration: '实时更新',
+        createdAt: Date.now() - 86400000 * 0.2,
+        notes: '全球热门流行视频与趋势内容',
+        category: '热门精选',
+      },
+      {
+        id: 'bm-ks-portal-1',
+        platform: 'kuaishou',
+        title: '快手 · 精选热榜推荐',
+        url: 'https://www.kuaishou.com/',
+        author: '快手精选',
+        duration: '短视频·直播',
+        createdAt: Date.now() - 86400000 * 0.1,
+        notes: '快手实时热门精选与高人气短视频',
+        category: '精选发现',
       },
     ];
   }
@@ -181,7 +241,14 @@ export class StorageManager {
   }
 
   public updateSettings(partial: Partial<AppSettings>): AppSettings {
-    this.data.settings = { ...this.data.settings, ...partial };
+    const nextSettings = { ...this.data.settings, ...partial };
+    if (partial.enabledPlatformIds !== undefined) {
+      nextSettings.enabledPlatformIds = this.sanitizeEnabledPlatforms(partial.enabledPlatformIds);
+    }
+    if (nextSettings.enabledPlatformIds && !nextSettings.enabledPlatformIds.includes(nextSettings.lastPlatform)) {
+      nextSettings.lastPlatform = nextSettings.enabledPlatformIds[0];
+    }
+    this.data.settings = nextSettings;
     this.saveData();
     return { ...this.data.settings };
   }

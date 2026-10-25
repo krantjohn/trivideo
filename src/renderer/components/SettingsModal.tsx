@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Settings,
@@ -7,6 +7,12 @@ import {
   HardDrive,
   Trash2,
   CheckCircle,
+  Layers,
+  Tv,
+  Flame,
+  Sparkles,
+  Youtube,
+  Video,
 } from 'lucide-react';
 import { AppSettings, PlatformId, PlatformSessionStatus } from '../../types';
 
@@ -29,8 +35,34 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClearSession,
   onClearAllCache,
 }) => {
-  const [activeTab, setActiveTab] = useState<'general' | 'sessions' | 'security'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'platforms' | 'sessions' | 'security'>('general');
+
+  const ALL_PLATFORMS: { id: PlatformId; name: string; englishName: string; brandColor: string; icon: React.ReactNode; desc: string }[] = [
+    { id: 'bilibili', name: '哔哩哔哩', englishName: 'Bilibili', brandColor: '#00AEEC', icon: <Tv size={18} />, desc: '番剧动漫与UP主创作社区' },
+    { id: 'douyin', name: '抖音', englishName: 'Douyin', brandColor: '#FE2C55', icon: <Flame size={18} />, desc: '国民级沉浸短视频与直播' },
+    { id: 'xiaohongshu', name: '小红书', englishName: 'RED', brandColor: '#FF2442', icon: <Sparkles size={18} />, desc: '年轻人的生活方式分享平台' },
+    { id: 'youtube', name: 'YouTube', englishName: 'YouTube', brandColor: '#FF0000', icon: <Youtube size={18} />, desc: '全球高质量长视频平台' },
+    { id: 'kuaishou', name: '快手', englishName: 'Kuaishou', brandColor: '#FF7700', icon: <Video size={18} />, desc: '记录真实生活的人气短视频' },
+  ];
+
+  const enabledIds: PlatformId[] = settings.enabledPlatformIds && settings.enabledPlatformIds.length > 0
+    ? settings.enabledPlatformIds
+    : ['bilibili', 'douyin', 'xiaohongshu', 'youtube', 'kuaishou'];
+  const enabledPlatformList = ALL_PLATFORMS.filter((p) => enabledIds.includes(p.id));
   const [clearedMessage, setClearedMessage] = useState<string | null>(null);
+
+  // Keyboard shortcut to close settings on Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -135,6 +167,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </button>
 
             <button
+              onClick={() => setActiveTab('platforms')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: activeTab === 'platforms' ? 'var(--bg-surface)' : 'transparent',
+                color: activeTab === 'platforms' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                fontSize: '13px',
+                fontWeight: activeTab === 'platforms' ? 600 : 500,
+                textAlign: 'left',
+              }}
+            >
+              <Layers size={15} />
+              <span>平台管理</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('sessions')}
               style={{
                 display: 'flex',
@@ -195,6 +246,152 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
             )}
 
+            {/* TAB: Platforms Management */}
+            {activeTab === 'platforms' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                    聚合平台启用管理
+                  </h4>
+                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                    开启或关闭平台。已关闭的平台将不会在侧边栏、顶部导航和跨平台搜索中显示，释放后台计算资源。系统至少保留一个启用的平台。
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {ALL_PLATFORMS.map((p) => {
+                    const isEnabled = enabledIds.includes(p.id);
+                    const isOnlyOne = enabledIds.length === 1 && isEnabled;
+
+                    const handleTogglePlatform = () => {
+                      if (isEnabled) {
+                        if (isOnlyOne) {
+                          showToast('至少需要保留一个启用的平台');
+                          return;
+                        }
+                        const nextEnabled = enabledIds.filter((id) => id !== p.id);
+                        const nextLast = settings.lastPlatform === p.id ? nextEnabled[0] : settings.lastPlatform;
+                        onUpdateSettings({
+                          enabledPlatformIds: nextEnabled,
+                          lastPlatform: nextLast,
+                        });
+                        showToast(`已禁用「${p.name}」平台`);
+                      } else {
+                        const nextEnabled = [...enabledIds, p.id];
+                        onUpdateSettings({
+                          enabledPlatformIds: nextEnabled,
+                        });
+                        showToast(`已启用「${p.name}」平台`);
+                      }
+                    };
+
+                    return (
+                      <div
+                        key={p.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '12px 16px',
+                          borderRadius: 'var(--radius-lg)',
+                          backgroundColor: 'var(--bg-surface)',
+                          border: isEnabled ? `1px solid ${p.brandColor}55` : '1px solid var(--border-subtle)',
+                          opacity: isEnabled ? 1 : 0.65,
+                          transition: 'all 0.15s ease-out',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div
+                            style={{
+                              width: '36px',
+                              height: '36px',
+                              borderRadius: 'var(--radius-md)',
+                              backgroundColor: `${p.brandColor}1a`,
+                              color: p.brandColor,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                            }}
+                          >
+                            {p.icon}
+                          </div>
+                          <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                {p.name}
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: '11px',
+                                  color: 'var(--text-muted)',
+                                  padding: '1px 6px',
+                                  borderRadius: 'var(--radius-full)',
+                                  backgroundColor: 'var(--bg-surface-active)',
+                                }}
+                              >
+                                {p.englishName}
+                              </span>
+                              {isOnlyOne && (
+                                <span
+                                  style={{
+                                    fontSize: '10px',
+                                    color: 'var(--accent-primary)',
+                                    padding: '1px 6px',
+                                    borderRadius: 'var(--radius-full)',
+                                    backgroundColor: 'var(--bg-surface-active)',
+                                  }}
+                                >
+                                  唯一定位平台
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                              {p.desc}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Switch Toggle */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <button
+                            type="button"
+                            disabled={isOnlyOne}
+                            onClick={handleTogglePlatform}
+                            style={{
+                              width: '46px',
+                              height: '24px',
+                              borderRadius: 'var(--radius-full)',
+                              backgroundColor: isEnabled ? p.brandColor : 'var(--bg-surface-active)',
+                              border: 'none',
+                              cursor: isOnlyOne ? 'not-allowed' : 'pointer',
+                              position: 'relative',
+                              transition: 'background-color 0.2s',
+                              padding: '2px',
+                              opacity: isOnlyOne ? 0.7 : 1,
+                            }}
+                            title={isOnlyOne ? '至少需要保留一个启用的平台' : isEnabled ? '点击禁用' : '点击启用'}
+                          >
+                            <div
+                              style={{
+                                width: '20px',
+                                height: '20px',
+                                borderRadius: 'var(--radius-full)',
+                                backgroundColor: '#ffffff',
+                                transform: isEnabled ? 'translateX(22px)' : 'translateX(0)',
+                                transition: 'transform 0.2s',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                              }}
+                            />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* TAB 1: General */}
             {activeTab === 'general' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -245,16 +442,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
                     默认启动平台
                   </h4>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    {(['bilibili', 'douyin', 'xiaohongshu'] as const).map((p) => {
-                      const name = p === 'bilibili' ? '哔哩哔哩' : p === 'douyin' ? '抖音' : '小红书';
-                      const selected = settings.lastPlatform === p;
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                    {enabledPlatformList.map((p) => {
+                      const selected = settings.lastPlatform === p.id;
                       return (
                         <button
-                          key={p}
-                          onClick={() => onUpdateSettings({ lastPlatform: p })}
+                          key={p.id}
+                          onClick={() => onUpdateSettings({ lastPlatform: p.id })}
                           style={{
                             flex: 1,
+                            minWidth: '80px',
                             padding: '8px 12px',
                             borderRadius: 'var(--radius-md)',
                             backgroundColor: selected ? 'var(--bg-surface-active)' : 'var(--bg-surface)',
@@ -264,7 +461,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             fontWeight: selected ? 600 : 500,
                           }}
                         >
-                          {name}
+                          {p.name}
                         </button>
                       );
                     })}
@@ -311,11 +508,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             {activeTab === 'sessions' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  每个平台拥有物理隔离的独立 Session 分区（如 persist:bilibili、persist:douyin、persist:xiaohongshu），Cookie与登录凭据互不干扰。
+                  每个平台拥有物理隔离的独立 Session 分区（如 persist:bilibili、persist:douyin、persist:xiaohongshu、persist:youtube、persist:kuaishou），Cookie与登录凭据互不干扰。
                 </p>
 
-                {(['bilibili', 'douyin', 'xiaohongshu'] as const).map((p) => {
-                  const name = p === 'bilibili' ? '哔哩哔哩 (Bilibili)' : p === 'douyin' ? '抖音 (Douyin)' : '小红书 (Xiaohongshu)';
+                {(['bilibili', 'douyin', 'xiaohongshu', 'youtube', 'kuaishou'] as const).map((p) => {
+                  const name =
+                    p === 'bilibili'
+                      ? '哔哩哔哩 (Bilibili)'
+                      : p === 'douyin'
+                      ? '抖音 (Douyin)'
+                      : p === 'xiaohongshu'
+                      ? '小红书 (Xiaohongshu)'
+                      : p === 'youtube'
+                      ? 'YouTube (Google)'
+                      : '快手 (Kuaishou)';
                   const status = sessionStatuses[p];
                   return (
                     <div

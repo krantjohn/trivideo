@@ -8,6 +8,10 @@ import {
   BookmarkItem,
   NavigationState,
   PlatformSessionStatus,
+  LayoutMode,
+  PaneId,
+  SplitConfig,
+  SplitBounds,
 } from '../types';
 
 const api: ElectronAPI = {
@@ -17,6 +21,40 @@ const api: ElectronAPI = {
   getActivePlatform: () => ipcRenderer.invoke('platform:getActive'),
   setContentBounds: (bounds: ContentBounds) => ipcRenderer.invoke('platform:setBounds', bounds),
   setViewMode: (mode: ViewMode) => ipcRenderer.invoke('platform:setViewMode', mode),
+  setPlatformViewVisible: (visible: boolean) => ipcRenderer.invoke('platform:setVisible', visible),
+  searchAll: (query: string) => ipcRenderer.invoke('platform:searchAll', query),
+
+
+
+  // Split-Screen Layout Management
+
+  setLayoutMode: (mode: LayoutMode) => ipcRenderer.invoke('layout:setMode', mode),
+
+  getLayoutMode: () => ipcRenderer.invoke('layout:getMode'),
+
+  getSplitConfig: () => ipcRenderer.invoke('split:getConfig'),
+
+  setSplitPlatform: (pane: PaneId, platform: PlatformId) => ipcRenderer.invoke('split:setPlatform', pane, platform),
+  setPanePlatform: (paneId: string, platform: PlatformId) => ipcRenderer.invoke('split:setPanePlatform', paneId, platform),
+
+  setFocusedPane: (pane: PaneId) => ipcRenderer.invoke('split:setFocus', pane),
+
+  setSplitBounds: (bounds: SplitBounds) => ipcRenderer.invoke('split:setBounds', bounds),
+  setMultiPaneBounds: (bounds: Record<string, ContentBounds>) => ipcRenderer.invoke('split:setMultiBounds', bounds),
+
+  onSplitConfigChange: (callback: (config: SplitConfig) => void) => {
+
+    const handler = (_: any, config: SplitConfig) => callback(config);
+
+    ipcRenderer.on('split:configChanged', handler);
+
+    return () => {
+
+      ipcRenderer.removeListener('split:configChanged', handler);
+
+    };
+
+  },
 
   // Navigation
   navigate: (url: string) => ipcRenderer.invoke('nav:navigate', url),
@@ -77,6 +115,15 @@ const api: ElectronAPI = {
     ipcRenderer.on('window:maximizeChanged', handler);
     return () => {
       ipcRenderer.removeListener('window:maximizeChanged', handler);
+    };
+  },
+  exitFullscreen: () => ipcRenderer.invoke('window:exitFullscreen'),
+  isFullscreen: () => ipcRenderer.invoke('window:isFullscreen'),
+  onFullscreenChange: (callback: (isFs: boolean) => void) => {
+    const handler = (_: any, isFs: boolean) => callback(isFs);
+    ipcRenderer.on('window:fullscreenChanged', handler);
+    return () => {
+      ipcRenderer.removeListener('window:fullscreenChanged', handler);
     };
   },
 };

@@ -13,6 +13,8 @@ import {
   Flame,
   Layers,
   Sparkles,
+  Youtube,
+  Video,
 } from 'lucide-react';
 import { PlatformId, PlatformConfig, ViewMode, PlatformSessionStatus } from '../../types';
 import { triVideoService } from '../services/api';
@@ -59,6 +61,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         return <Tv size={18} />;
       case 'xiaohongshu':
         return <Sparkles size={18} />;
+      case 'youtube':
+        return <Youtube size={18} />;
+      case 'kuaishou':
+        return <Video size={18} />;
     }
   };
 

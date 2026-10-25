@@ -9,6 +9,11 @@ import {
   HistoryItem,
   NavigationState,
   PlatformSessionStatus,
+  BatchSearchResult,
+  LayoutMode,
+  PaneId,
+  SplitConfig,
+  SplitBounds,
 } from '../../types';
 
 const isElectron = typeof window !== 'undefined' && Boolean(window.triVideoAPI);
@@ -79,6 +84,48 @@ const mockPlatforms: PlatformConfig[] = [
       { id: 'career', name: '职场干货', url: 'https://www.xiaohongshu.com/explore?channel_id=homefeed.career_v3' },
       { id: 'home', name: '家居装潢', url: 'https://www.xiaohongshu.com/explore?channel_id=homefeed.home_v3' },
       { id: 'game', name: '游戏日常', url: 'https://www.xiaohongshu.com/explore?channel_id=homefeed.game_v3' },
+    ],
+  },
+  {
+    id: 'youtube',
+    name: 'YouTube',
+    englishName: 'YouTube',
+    badge: '长视频·全球流行',
+    brandColor: '#FF0000',
+    accentColor: '#CC0000',
+    homeUrl: 'https://www.youtube.com/',
+    searchUrlTemplate: 'https://www.youtube.com/results?search_query={query}',
+    loginUrl: 'https://accounts.google.com/ServiceLogin?service=youtube',
+    partition: 'persist:youtube',
+    categories: [
+      { id: 'home', name: '首页推荐', url: 'https://www.youtube.com/' },
+      { id: 'trending', name: '热门精选', url: 'https://www.youtube.com/feed/trending' },
+      { id: 'music', name: '音乐', url: 'https://www.youtube.com/channel/UC-9-kyTW8ZkZNDHQJ6FgpwQ' },
+      { id: 'gaming', name: '游戏', url: 'https://www.youtube.com/gaming' },
+      { id: 'news', name: '新闻', url: 'https://www.youtube.com/news' },
+      { id: 'sports', name: '体育', url: 'https://www.youtube.com/channel/UCEg25rdRZXg32iwai6N6l0w' },
+      { id: 'subscriptions', name: '订阅内容', url: 'https://www.youtube.com/feed/subscriptions' },
+    ],
+  },
+  {
+    id: 'kuaishou',
+    name: '快手',
+    englishName: 'Kuaishou',
+    badge: '短视频·生活社区',
+    brandColor: '#FF7700',
+    accentColor: '#FF5000',
+    homeUrl: 'https://www.kuaishou.com/',
+    searchUrlTemplate: 'https://www.kuaishou.com/search/video?searchKey={query}',
+    loginUrl: 'https://www.kuaishou.com/',
+    partition: 'persist:kuaishou',
+    categories: [
+      { id: 'reco', name: '精选发现', url: 'https://www.kuaishou.com/' },
+      { id: 'hot', name: '快手热榜', url: 'https://www.kuaishou.com/search/video?searchKey=%E7%83%AD%E6%A6%9C' },
+      { id: 'live', name: '直播大厅', url: 'https://live.kuaishou.com/' },
+      { id: 'shortplay', name: '精品短剧', url: 'https://www.kuaishou.com/search/video?searchKey=%E7%9F%AD%E5%89%A7' },
+      { id: 'game', name: '游戏专区', url: 'https://www.kuaishou.com/search/video?searchKey=%E6%B8%B8%E6%88%8F' },
+      { id: 'entertainment', name: '娱乐综艺', url: 'https://www.kuaishou.com/search/video?searchKey=%E5%A8%B1%E4%B9%90' },
+      { id: 'acfun', name: 'AcFun弹幕', url: 'https://www.acfun.cn/' },
     ],
   },
 ];
@@ -172,6 +219,62 @@ export const triVideoService: ElectronAPI = {
   setViewMode: async (mode: ViewMode): Promise<void> => {
     if (isElectron) return window.triVideoAPI.setViewMode(mode);
   },
+  setPlatformViewVisible: async (visible: boolean): Promise<void> => {
+    if (isElectron) return window.triVideoAPI.setPlatformViewVisible(visible);
+  },
+  searchAll: async (query: string): Promise<BatchSearchResult> => {
+    if (isElectron) return window.triVideoAPI.searchAll(query);
+    const cleanQuery = (query || '').trim().slice(0, 200);
+    return {
+      query: cleanQuery,
+      totalPlatforms: mockPlatforms.length,
+      submittedPlatforms: mockPlatforms.map((p) => p.id),
+      failedPlatforms: [],
+    };
+  },
+
+  // Split-Screen Layout Management
+  setLayoutMode: async (mode: LayoutMode): Promise<boolean> => {
+    if (isElectron) return window.triVideoAPI.setLayoutMode(mode);
+    return true;
+  },
+  getLayoutMode: async (): Promise<LayoutMode> => {
+    if (isElectron) return window.triVideoAPI.getLayoutMode();
+    return 'single';
+  },
+  getSplitConfig: async (): Promise<SplitConfig> => {
+    if (isElectron) return window.triVideoAPI.getSplitConfig();
+    return {
+      mode: 'single',
+      leftPlatform: 'bilibili',
+      rightPlatform: 'youtube',
+      focusedPane: 'left',
+      splitRatio: 0.5,
+    };
+  },
+  setSplitPlatform: async (pane: PaneId, platform: PlatformId): Promise<boolean> => {
+    if (isElectron) return window.triVideoAPI.setSplitPlatform(pane, platform);
+    return true;
+  },
+  setPanePlatform: async (paneId: string, platform: PlatformId): Promise<boolean> => {
+    if (isElectron) return window.triVideoAPI.setPanePlatform(paneId, platform);
+    return true;
+  },
+  setFocusedPane: async (pane: PaneId): Promise<void> => {
+    if (isElectron) return window.triVideoAPI.setFocusedPane(pane);
+  },
+  setSplitBounds: async (bounds: SplitBounds): Promise<void> => {
+    if (isElectron) return window.triVideoAPI.setSplitBounds(bounds);
+  },
+  setMultiPaneBounds: async (bounds: Record<string, ContentBounds>): Promise<void> => {
+    if (isElectron) return window.triVideoAPI.setMultiPaneBounds(bounds);
+  },
+  onSplitConfigChange: (callback: (config: SplitConfig) => void) => {
+    if (isElectron && window.triVideoAPI.onSplitConfigChange) {
+      return window.triVideoAPI.onSplitConfigChange(callback);
+    }
+    return () => {};
+  },
 
   navigate: async (url: string): Promise<void> => {
     if (isElectron) return window.triVideoAPI.navigate(url);
@@ -222,6 +325,8 @@ export const triVideoService: ElectronAPI = {
       bilibili: { platform: 'bilibili', isLoggedIn: false, cookieCount: 12, lastChecked: Date.now() },
       douyin: { platform: 'douyin', isLoggedIn: false, cookieCount: 8, lastChecked: Date.now() },
       xiaohongshu: { platform: 'xiaohongshu', isLoggedIn: false, cookieCount: 6, lastChecked: Date.now() },
+      youtube: { platform: 'youtube', isLoggedIn: false, cookieCount: 10, lastChecked: Date.now() },
+      kuaishou: { platform: 'kuaishou', isLoggedIn: false, cookieCount: 8, lastChecked: Date.now() },
     };
   },
   clearPlatformSession: async (platform: PlatformId): Promise<void> => {
@@ -300,6 +405,17 @@ export const triVideoService: ElectronAPI = {
   },
   onMaximizeChange: (callback: (isMax: boolean) => void) => {
     if (isElectron) return window.triVideoAPI.onMaximizeChange(callback);
+    return () => {};
+  },
+  exitFullscreen: async (): Promise<void> => {
+    if (isElectron) return window.triVideoAPI.exitFullscreen();
+  },
+  isFullscreen: async (): Promise<boolean> => {
+    if (isElectron) return window.triVideoAPI.isFullscreen();
+    return false;
+  },
+  onFullscreenChange: (callback: (isFs: boolean) => void) => {
+    if (isElectron) return window.triVideoAPI.onFullscreenChange(callback);
     return () => {};
   },
 };
