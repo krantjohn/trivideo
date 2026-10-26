@@ -1,6 +1,6 @@
 {
   "name": "trivideo",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "三栖视频中心 (TriVideo) - 抖音、哔哩哔哩、小红书三平台聚合桌面客户端",
   "main": "dist/main/main.js",
   "author": "TriVideo Team",

@@ -139,3 +139,114 @@ input {
   }
 }
 
+
+
+/* ==========================================================================
+   RPG Adventure Theme (奇幻冒险 / 羊皮纸木工坊专属拟物样式)
+   ========================================================================== */
+[data-theme='adventure'] header.drag-region {
+  background: linear-gradient(180deg, #381E12 0%, #231109 100%) !important;
+  border-bottom: 2px solid #5A3521 !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+}
+
+[data-theme='adventure'] .sidebar {
+  background: linear-gradient(90deg, #2C160C 0%, #1F0F08 100%) !important;
+  border-right: 2px solid #4D2D1E !important;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.4);
+}
+
+/* Parchment Search Bar */
+[data-theme='adventure'] .search-input-container {
+  background: linear-gradient(180deg, #FAF2DF 0%, #EADBBA 100%) !important;
+  border: 1.5px solid #C4AD82 !important;
+  border-radius: 8px !important;
+  box-shadow: inset 0 2px 4px rgba(60, 30, 10, 0.2), 0 2px 6px rgba(0, 0, 0, 0.35) !important;
+}
+
+[data-theme='adventure'] .search-input-container input {
+  color: #362213 !important;
+  font-weight: 500 !important;
+}
+
+[data-theme='adventure'] .search-input-container input::placeholder {
+  color: #8C684D !important;
+}
+
+[data-theme='adventure'] .search-input-container svg {
+  color: #7A5538 !important;
+}
+
+/* Wood & Bevel 3D Action Buttons */
+.rpg-bevel-btn {
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+  border-radius: 8px !important;
+  transition: all 0.12s ease !important;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), 0 6px 10px rgba(0, 0, 0, 0.3) !important;
+}
+
+.rpg-bevel-btn:hover {
+  filter: brightness(1.1);
+  transform: translateY(-1px);
+}
+
+.rpg-bevel-btn:active {
+  transform: translateY(3px) !important;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Green Emerald Quest Button */
+.rpg-btn-green {
+  background: linear-gradient(180deg, #2ECC71 0%, #27AE60 100%) !important;
+  border: 1.5px solid #1E8449 !important;
+  border-bottom: 4px solid #145A32 !important;
+  color: #FFFFFF !important;
+}
+
+/* Gold Treasure Button */
+.rpg-btn-gold {
+  background: linear-gradient(180deg, #F39C12 0%, #D68910 100%) !important;
+  border: 1.5px solid #B9770E !important;
+  border-bottom: 4px solid #7E5109 !important;
+  color: #2C1810 !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+}
+
+/* Red Seal Close Button */
+.rpg-btn-red {
+  background: linear-gradient(180deg, #E74C3C 0%, #C0392B 100%) !important;
+  border: 1.5px solid #96281B !important;
+  border-bottom: 4px solid #641E16 !important;
+  color: #FFFFFF !important;
+}
+
+/* Modal Parchment Paper Effect */
+[data-theme='adventure'] .settings-modal-dialog,
+[data-theme='adventure'] .onboarding-modal-dialog {
+  background: linear-gradient(180deg, #FBF4E4 0%, #EADBBA 100%) !important;
+  border: 3px solid #734832 !important;
+  border-radius: 14px !important;
+  color: #362213 !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.8), 0 0 0 1px #4D2D1E, inset 0 0 24px rgba(130, 80, 40, 0.15) !important;
+}
+
+[data-theme='adventure'] .settings-modal-sidebar {
+  background: #E4CE9E !important;
+  border-right: 2px dashed #B89968 !important;
+}
+
+[data-theme='adventure'] .settings-nav-item {
+  color: #5C3D24 !important;
+}
+
+[data-theme='adventure'] .settings-nav-item.active {
+  background: #FAF2DF !important;
+  color: #C0392B !important;
+  border-left: 4px solid #C0392B !important;
+  font-weight: bold;
+}

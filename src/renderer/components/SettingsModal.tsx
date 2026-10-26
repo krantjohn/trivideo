@@ -30,6 +30,7 @@ import {
 import { AppSettings, PlatformId, PlatformSessionStatus, UpdateInfo, ThemeId } from '../../types';
 import { triVideoService } from '../services/api';
 import { CAT_WALLPAPERS, CatPawIcon } from '../assets/CatAssets';
+import { WaxSealIcon } from '../assets/AdventureAssets';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -161,6 +162,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       onClick={onClose}
     >
       <div
+        className="settings-modal-dialog"
         style={{
           width: '740px',
           maxHeight: '85vh',
@@ -497,6 +499,14 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 icon: React.ReactNode;
               }[] = [
                 {
+                  id: 'adventure',
+                  name: '羊皮纸冒险',
+                  tag: '奇幻酒馆',
+                  desc: '古旧羊皮纸、深胡桃木与赤红火漆印章',
+                  colors: ['#2C1810', '#F5E8C7', '#C0392B'],
+                  icon: <WaxSealIcon size={16} />,
+                },
+                {
                   id: 'cat',
                   name: '猫咪治愈',
                   tag: '温暖治愈',
@@ -651,7 +661,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                       <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Palette size={15} color="var(--accent-primary)" />
-                        <span>界面外观与配色主题 (8大精选方案)</span>
+                        <span>界面外观与配色主题 (9大精选方案)</span>
                       </h4>
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                         当前: {THEMES.find((t) => t.id === settings.theme)?.name || settings.theme}

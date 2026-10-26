@@ -25,6 +25,7 @@ import {
   ThemeId,
 } from '../../types';
 import { CatPawIcon } from '../assets/CatAssets';
+import { WaxSealIcon, MilestoneNode } from '../assets/AdventureAssets';
 
 interface TopNavProps {
   platforms: PlatformConfig[];
@@ -264,7 +265,7 @@ export const TopNav: React.FC<TopNavProps> = ({
 
       {/* 5. Platform Search Box with Loading & Clear */}
       <div
-        className="no-drag"
+        className="no-drag search-input-container"
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -293,6 +294,8 @@ export const TopNav: React.FC<TopNavProps> = ({
         >
           {navState.isLoading ? (
             <Loader2 size={14} className="spin-animation" color="var(--accent-primary)" />
+          ) : theme === 'adventure' ? (
+            <WaxSealIcon size={18} />
           ) : (
             <Search size={14} />
           )}
@@ -302,7 +305,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={theme === 'cat' ? "全网聚合搜喵... 🐾 (Enter)" : "搜索 (Enter)..."}
+          placeholder={theme === 'cat' ? "全网聚合搜喵... 🐾 (Enter)" : theme === 'adventure' ? "探险全网视频卷轴... 📜 (Enter)" : "搜索 (Enter)..."}
           style={{
             flex: 1,
             background: 'transparent',
@@ -323,6 +326,31 @@ export const TopNav: React.FC<TopNavProps> = ({
 
       {/* Layout Mode Toggle (Single, Split, Triple, Quad) */}
       {onToggleLayoutMode && (
+        theme === 'adventure' ? (
+          <div
+            className="no-drag"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              background: 'linear-gradient(180deg, #FBF4E4 0%, #EADBBA 100%)',
+              borderRadius: '16px',
+              padding: '3px 8px',
+              border: '1.5px solid #C4AD82',
+              boxShadow: 'inset 0 1px 3px rgba(60,30,10,0.2), 0 2px 5px rgba(0,0,0,0.3)',
+              marginLeft: '6px',
+              marginRight: '6px',
+              gap: '6px',
+            }}
+          >
+            <MilestoneNode label="单屏沉浸" roman="I" active={layoutMode === 'single'} onClick={() => onToggleLayoutMode('single')} />
+            <div style={{ width: '6px', height: '1px', borderBottom: '1.5px dashed #8C684D' }} />
+            <MilestoneNode label="左右双屏" roman="II" active={layoutMode === 'split'} onClick={() => onToggleLayoutMode('split')} />
+            <div style={{ width: '6px', height: '1px', borderBottom: '1.5px dashed #8C684D' }} />
+            <MilestoneNode label="三屏工作台" roman="III" active={layoutMode === 'triple'} onClick={() => onToggleLayoutMode('triple')} />
+            <div style={{ width: '6px', height: '1px', borderBottom: '1.5px dashed #8C684D' }} />
+            <MilestoneNode label="四屏矩阵" roman="IV" active={layoutMode === 'quad'} onClick={() => onToggleLayoutMode('quad')} />
+          </div>
+        ) : (
         <div
           className="no-drag"
           style={{
@@ -431,6 +459,7 @@ export const TopNav: React.FC<TopNavProps> = ({
             <span>四屏</span>
           </button>
         </div>
+        )
       )}
       {/* 6. Window Controls (Minimize, Maximize, Close) */}
       <div

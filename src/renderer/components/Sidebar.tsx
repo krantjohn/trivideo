@@ -17,8 +17,10 @@ import {
 } from 'lucide-react';
 import { PlatformId, PlatformConfig, ViewMode, PlatformSessionStatus, ThemeId } from '../../types';
 import { CatPawIcon, CatCompanionWidget } from '../assets/CatAssets';
+import { WaxSealIcon, HangingBannerTab } from '../assets/AdventureAssets';
 
 const THEME_INFO: Record<ThemeId, { name: string; icon: React.ReactNode }> = {
+  adventure: { name: '羊皮纸冒险', icon: <WaxSealIcon size={18} /> },
   cat: { name: '猫咪治愈', icon: <CatPawIcon size={18} color="var(--accent-primary)" /> },
   cyberpunk: { name: '赛博霓虹', icon: <Zap size={18} color="var(--accent-primary)" /> },
   forest: { name: '森林抹茶', icon: <Trees size={18} color="var(--accent-primary)" /> },
@@ -196,6 +198,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {platforms.map((p) => {
               const isActive = activePlatform === p.id;
+              if (theme === 'adventure') {
+                return (
+                  <HangingBannerTab
+                    key={p.id}
+                    title={p.name}
+                    badgeText={p.englishName}
+                    color={p.brandColor}
+                    active={isActive}
+                    collapsed={collapsed}
+                    icon={getPlatformIcon(p.id)}
+                    onClick={() => {
+                      onSelectPlatform(p.id);
+                      onSelectViewMode?.('platform');
+                    }}
+                  />
+                );
+              }
               return (
                 <button
                   key={p.id}

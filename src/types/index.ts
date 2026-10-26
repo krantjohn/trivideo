@@ -82,6 +82,7 @@ export type ThemeId =
   | 'sunset'
   | 'nordic'
   | 'sakura'
+  | 'adventure'
   | 'system';
 
 export interface AppSettings {

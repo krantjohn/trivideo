@@ -214,3 +214,24 @@ test('StorageManager: Blur and Opacity bounds validation', () => {
   }
 });
 
+
+
+test('Adventure Parchment & Wood Theme: Assets and CSS integration', () => {
+  const css = fs.readFileSync(path.join(__dirname, '../src/renderer/styles/variables.css'), 'utf-8');
+  const indexCss = fs.readFileSync(path.join(__dirname, '../src/renderer/styles/index.css'), 'utf-8');
+  const assetsPath = path.join(__dirname, '../src/renderer/assets/AdventureAssets.tsx');
+
+  assert.ok(fs.existsSync(assetsPath), 'AdventureAssets.tsx must exist');
+  const assetsCode = fs.readFileSync(assetsPath, 'utf-8');
+  assert.ok(assetsCode.includes('WaxSealIcon'), 'Must export WaxSealIcon');
+  assert.ok(assetsCode.includes('HangingBannerTab'), 'Must export HangingBannerTab');
+  assert.ok(assetsCode.includes('MilestoneNode'), 'Must export MilestoneNode');
+
+  assert.ok(css.includes("[data-theme='adventure']"), 'Must define adventure theme in variables.css');
+  assert.ok(css.includes('--bg-primary: #1e110a;'), 'Adventure theme must have dark timber background');
+  assert.ok(css.includes('--bg-surface: #f5e8c7;'), 'Adventure theme must have parchment surface color');
+  assert.ok(css.includes('--accent-primary: #c0392b;'), 'Adventure theme must have ruby wax seal accent');
+
+  assert.ok(indexCss.includes("[data-theme='adventure']"), 'Must define adventure theme rules in index.css');
+  assert.ok(indexCss.includes('.search-input-container'), 'Must style parchment search container');
+});
