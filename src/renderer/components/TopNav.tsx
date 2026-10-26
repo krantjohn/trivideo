@@ -5,7 +5,6 @@ import {
   RotateCw,
   X,
   Home,
-  Star,
   ExternalLink,
   Search,
   Minus,
@@ -35,10 +34,9 @@ interface TopNavProps {
   onReload: () => void;
   onStop: () => void;
   onGoHome: () => void;
-  onBookmarkCurrent: () => void;
   onOpenExternal: () => void;
   onSearch: (query: string) => void;
-  sessionStatuses: Record<PlatformId, PlatformSessionStatus>;
+  sessionStatuses?: Record<PlatformId, PlatformSessionStatus>;
   isMaximized: boolean;
   onMinimize: () => void;
   onMaximize: () => void;
@@ -57,10 +55,8 @@ export const TopNav: React.FC<TopNavProps> = ({
   onReload,
   onStop,
   onGoHome,
-  onBookmarkCurrent,
   onOpenExternal,
   onSearch,
-  sessionStatuses,
   isMaximized,
   onMinimize,
   onMaximize,
@@ -113,7 +109,6 @@ export const TopNav: React.FC<TopNavProps> = ({
       <div className="no-drag" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
         {platforms.map((p) => {
           const isActive = activePlatform === p.id;
-          const session = sessionStatuses[p.id];
           return (
             <button
               key={p.id}
@@ -135,21 +130,6 @@ export const TopNav: React.FC<TopNavProps> = ({
               className="platform-tab-btn"
             >
               <span>{p.name}</span>
-              {session?.isLoggedIn && (
-                <span
-                  title="账号已在此平台持久登录"
-                  style={{
-                    fontSize: '10px',
-                    padding: '1px 5px',
-                    borderRadius: 'var(--radius-full)',
-                    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                    color: 'var(--status-success)',
-                    border: '1px solid rgba(16, 185, 129, 0.3)',
-                  }}
-                >
-                  已登录
-                </span>
-              )}
             </button>
           );
         })}
@@ -226,27 +206,8 @@ export const TopNav: React.FC<TopNavProps> = ({
         </button>
       </div>
 
-      {/* 3. Action Buttons: Bookmark & External */}
+      {/* 3. Action Buttons: External */}
       <div className="no-drag" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-        <button
-          onClick={onBookmarkCurrent}
-          title="收藏当前页面到收藏夹"
-          style={{
-            padding: '7px 10px',
-            borderRadius: 'var(--radius-md)',
-            backgroundColor: 'var(--bg-surface)',
-            border: '1px solid var(--border-subtle)',
-            color: 'var(--text-secondary)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            fontSize: '12px',
-          }}
-          className="hover-btn"
-        >
-          <Star size={14} color="#f59e0b" />
-          <span>收藏</span>
-        </button>
 
         <button
           onClick={onOpenExternal}
@@ -313,7 +274,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           data-id="btn-search-trigger"
           onClick={handleTriggerSearch}
           disabled={isSubmitting || !searchQuery.trim()}
-          title="全平台统一搜索"
+          title="搜索"
           style={{
             color: searchQuery.trim() ? 'var(--accent-primary)' : 'var(--text-muted)',
             display: 'flex',
@@ -334,7 +295,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="全平台统一搜索 (Enter)..."
+          placeholder="搜索 (Enter)..."
           style={{
             flex: 1,
             background: 'transparent',

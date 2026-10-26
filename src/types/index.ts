@@ -185,6 +185,13 @@ export interface ElectronAPI {
   updateSettings: (settings: Partial<AppSettings>) => Promise<AppSettings>;
   onThemeChange: (callback: (theme: 'dark' | 'light') => void) => () => void;
 
+  // Software Overwrite Updates
+  checkForUpdates: () => Promise<UpdateInfo>;
+  downloadAndInstallUpdate: (url?: string) => Promise<{ success: boolean; message: string }>;
+  openReleasePage: (url?: string) => Promise<void>;
+  getAppVersion: () => Promise<string>;
+  onUpdateProgress: (callback: (progress: { percent: number; transferred: number; total: number }) => void) => () => void;
+
   // Window Controls
   minimizeWindow: () => Promise<void>;
   maximizeWindow: () => Promise<void>;
@@ -194,6 +201,17 @@ export interface ElectronAPI {
   exitFullscreen: () => Promise<void>;
   isFullscreen: () => Promise<boolean>;
   onFullscreenChange: (callback: (isFs: boolean) => void) => () => void;
+}
+
+export interface UpdateInfo {
+  hasUpdate: boolean;
+  currentVersion: string;
+  latestVersion: string;
+  releaseName: string;
+  releaseNotes: string;
+  releaseUrl: string;
+  downloadUrl: string | null;
+  publishedAt: string;
 }
 
 declare global {

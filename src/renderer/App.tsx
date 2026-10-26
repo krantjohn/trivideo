@@ -2,8 +2,6 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TopNav } from './components/TopNav';
 import { CategoryBar } from './components/CategoryBar';
-import { FavoritesView } from './components/FavoritesView';
-import { HistoryView } from './components/HistoryView';
 import { SettingsModal } from './components/SettingsModal';
 import { OnboardingModal } from './components/OnboardingModal';
 import { SplitView } from './components/SplitView';
@@ -15,8 +13,6 @@ import {
   NavigationState,
   PlatformSessionStatus,
   AppSettings,
-  BookmarkItem,
-  HistoryItem,
   LayoutMode,
   PaneId,
   SplitConfig,
@@ -46,8 +42,6 @@ export const App: React.FC = () => {
     title: '哔哩哔哩',
   });
 
-  const [bookmarks, setBookmarks] = useState<BookmarkItem[]>([]);
-  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [sessionStatuses, setSessionStatuses] = useState<Record<PlatformId, PlatformSessionStatus>>({
     bilibili: { platform: 'bilibili', isLoggedIn: false, cookieCount: 0, lastChecked: Date.now() },
     douyin: { platform: 'douyin', isLoggedIn: false, cookieCount: 0, lastChecked: Date.now() },
@@ -82,12 +76,10 @@ export const App: React.FC = () => {
   useEffect(() => {
     async function init() {
       try {
-        const [loadedPlatforms, loadedSettings, loadedBookmarks, loadedHistory, initialStatuses] =
+        const [loadedPlatforms, loadedSettings, initialStatuses] =
           await Promise.all([
             triVideoService.getPlatforms(),
             triVideoService.getSettings(),
-            triVideoService.getBookmarks(),
-            triVideoService.getHistory(),
             triVideoService.getSessionStatus(),
           ]);
 
@@ -103,8 +95,6 @@ export const App: React.FC = () => {
             setActivePlatform(loadedSettings.lastPlatform);
           }
         }
-        setBookmarks(loadedBookmarks);
-        setHistory(loadedHistory);
         if (initialStatuses) {
           setSessionStatuses((prev) => ({ ...prev, ...initialStatuses }));
         }
@@ -128,8 +118,6 @@ export const App: React.FC = () => {
   useEffect(() => {
     const unsubNav = triVideoService.onNavigationStateChange((state: NavigationState) => {
       setNavState(state);
-      // Refresh history list
-      triVideoService.getHistory().then(setHistory);
     });
 
     const unsubMax = triVideoService.onMaximizeChange((max: boolean) => {
@@ -378,68 +366,11 @@ export const App: React.FC = () => {
     }
   };
 
-  const handleBookmarkCurrent = async () => {
-    try {
-      const state = await triVideoService.getNavigationState();
-      const currentPlatformConfig = platforms.find((p) => p.id === activePlatform);
-      const meta = await triVideoService.getPageMetadata?.().catch(() => null);
-
-      const newBm = await triVideoService.addBookmark({
-        platform: activePlatform,
-        title: meta?.title || state.title || `${currentPlatformConfig?.name} 精彩内容`,
-        url: state.currentUrl || currentPlatformConfig?.homeUrl || '',
-        coverUrl: meta?.coverUrl,
-        author: meta?.author,
-        duration: meta?.duration,
-        category: currentPlatformConfig?.name,
-      });
-      setBookmarks((prev) => [newBm, ...prev]);
-      showToast('已成功添加到收藏夹！');
-    } catch (err) {
-      console.error(err);
-      showToast('收藏失败');
-    }
-  };
-
   const enabledPlatformIds = settings.enabledPlatformIds && settings.enabledPlatformIds.length > 0
     ? settings.enabledPlatformIds
     : ['bilibili', 'douyin', 'xiaohongshu', 'youtube', 'kuaishou'];
 
   const visiblePlatforms = platforms.filter((p) => enabledPlatformIds.includes(p.id));
-
-  const handlePlayBookmarkItem = (item: BookmarkItem) => {
-    if (!enabledPlatformIds.includes(item.platform)) {
-      const cfg = platforms.find((p) => p.id === item.platform);
-      const name = cfg ? cfg.name : item.platform;
-      showToast(`平台「${name}」当前已禁用，请在设置中重新启用后再访问`);
-      return;
-    }
-    setActivePlatform(item.platform);
-    setViewMode('platform');
-    triVideoService.switchPlatform(item.platform);
-    triVideoService.setViewMode('platform');
-    triVideoService.navigate(item.url);
-  };
-
-  const handleRemoveBookmark = async (id: string) => {
-    await triVideoService.removeBookmark(id);
-    setBookmarks((prev) => prev.filter((b) => b.id !== id));
-    showToast('已从收藏夹移除');
-  };
-
-  const handlePlayHistoryItem = (item: HistoryItem) => {
-    if (!enabledPlatformIds.includes(item.platform)) {
-      const cfg = platforms.find((p) => p.id === item.platform);
-      const name = cfg ? cfg.name : item.platform;
-      showToast(`平台「${name}」当前已禁用，请在设置中重新启用后再访问`);
-      return;
-    }
-    setActivePlatform(item.platform);
-    setViewMode('platform');
-    triVideoService.switchPlatform(item.platform);
-    triVideoService.setViewMode('platform');
-    triVideoService.navigate(item.url);
-  };
 
   const handleCompleteWizard = async (selectedPlatformIds: PlatformId[]) => {
     const nextLast = selectedPlatformIds.includes(activePlatform)
@@ -473,17 +404,6 @@ export const App: React.FC = () => {
     triVideoService.updateSettings(updated);
   };
 
-  const handleRemoveHistoryItem = async (id: string) => {
-    await triVideoService.removeHistoryItem(id);
-    setHistory((prev) => prev.filter((h) => h.id !== id));
-  };
-
-  const handleClearHistory = async () => {
-    await triVideoService.clearHistory();
-    setHistory([]);
-    showToast('历史记录已全部清空');
-  };
-
   const handleClearSession = async (platform: PlatformId) => {
     await triVideoService.clearPlatformSession(platform);
     const updated = await triVideoService.getSessionStatus();
@@ -515,8 +435,6 @@ export const App: React.FC = () => {
         theme={theme}
         onToggleTheme={handleToggleTheme}
         onOpenSettings={() => setIsSettingsOpen(true)}
-        bookmarkCount={bookmarks.length}
-        historyCount={history.length}
         sessionStatuses={sessionStatuses}
       />
 
@@ -533,7 +451,6 @@ export const App: React.FC = () => {
           onReload={() => triVideoService.reload()}
           onStop={() => triVideoService.stopLoading()}
           onGoHome={() => currentPlatformConfig && triVideoService.navigate(currentPlatformConfig.homeUrl)}
-          onBookmarkCurrent={handleBookmarkCurrent}
           onOpenExternal={() => triVideoService.openExternal(navState.currentUrl)}
           onSearch={handleSearch}
           sessionStatuses={sessionStatuses}
@@ -550,10 +467,6 @@ export const App: React.FC = () => {
           <CategoryBar
             currentPlatform={currentPlatformConfig}
             onSelectCategory={handleCategorySelect}
-            viewMode={viewMode}
-            onSelectViewMode={handleSelectViewMode}
-            bookmarkCount={bookmarks.length}
-            historyCount={history.length}
             currentUrl={navState.currentUrl}
           />
         )}
@@ -604,23 +517,6 @@ export const App: React.FC = () => {
               onMultiBoundsChange={handleMultiBoundsChange}
               onReloadPane={handleReloadPane}
               onGoHomePane={handleGoHomePane}
-            />
-          )}
-
-          {viewMode === 'favorites' && (
-            <FavoritesView
-              bookmarks={bookmarks}
-              onPlayItem={handlePlayBookmarkItem}
-              onRemoveBookmark={handleRemoveBookmark}
-            />
-          )}
-
-          {viewMode === 'history' && (
-            <HistoryView
-              history={history}
-              onPlayHistoryItem={handlePlayHistoryItem}
-              onRemoveHistoryItem={handleRemoveHistoryItem}
-              onClearHistory={handleClearHistory}
             />
           )}
         </div>

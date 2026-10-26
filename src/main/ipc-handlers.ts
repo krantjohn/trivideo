@@ -1,8 +1,9 @@
-import { ipcMain, BrowserWindow } from 'electron';
+import { ipcMain, BrowserWindow, shell } from 'electron';
 import { PlatformManager } from './platform-manager';
 import { SessionManager } from './session-manager';
 import { StorageManager } from './storage';
 import { PLATFORM_CONFIGS } from './platform-config';
+import { AppUpdater } from './updater';
 import {
 
   PlatformId,
@@ -185,6 +186,25 @@ export function registerIpcHandlers(
       platformManager.updateEnabledPlatforms(updated.enabledPlatformIds);
     }
     return updated;
+  });
+
+  // Software Overwrite Updates
+  const appUpdater = new AppUpdater(mainWindow);
+
+  ipcMain.handle('updater:check', async () => {
+    return appUpdater.checkForUpdates();
+  });
+
+  ipcMain.handle('updater:download', async (_, url?: string) => {
+    return appUpdater.downloadAndInstall(url);
+  });
+
+  ipcMain.handle('updater:openReleasePage', async (_, url?: string) => {
+    shell.openExternal(url || 'https://github.com/krantjohn/trivideo/releases');
+  });
+
+  ipcMain.handle('updater:getVersion', async () => {
+    return appUpdater.getCurrentVersion();
   });
 
   // Window Controls

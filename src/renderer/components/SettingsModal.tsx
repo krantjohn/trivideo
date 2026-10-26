@@ -13,8 +13,13 @@ import {
   Sparkles,
   Youtube,
   Video,
+  RefreshCw,
+  Download,
+  ExternalLink,
+  AlertCircle,
 } from 'lucide-react';
-import { AppSettings, PlatformId, PlatformSessionStatus } from '../../types';
+import { AppSettings, PlatformId, PlatformSessionStatus, UpdateInfo } from '../../types';
+import { triVideoService } from '../services/api';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -35,7 +40,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onClearSession,
   onClearAllCache,
 }) => {
-  const [activeTab, setActiveTab] = useState<'general' | 'platforms' | 'sessions' | 'security'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'platforms' | 'sessions' | 'security' | 'updates'>('general');
+  const [updateInfo, setUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [currentVersion, setCurrentVersion] = useState<string>('1.0.2');
+  const [updateState, setUpdateState] = useState<'idle' | 'checking' | 'available' | 'uptodate' | 'downloading' | 'ready' | 'error'>('idle');
+  const [downloadProgress, setDownloadProgress] = useState<{ percent: number; transferred: number; total: number } | null>(null);
+  const [updateErrorMsg, setUpdateErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    triVideoService.getAppVersion().then((v) => {
+      if (v) setCurrentVersion(v);
+    }).catch(() => {});
+  }, []);
 
   const ALL_PLATFORMS: { id: PlatformId; name: string; englishName: string; brandColor: string; icon: React.ReactNode; desc: string }[] = [
     { id: 'bilibili', name: '哔哩哔哩', englishName: 'Bilibili', brandColor: '#00AEEC', icon: <Tv size={18} />, desc: '番剧动漫与UP主创作社区' },
@@ -74,6 +90,48 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const handleClearPlatformSession = (p: PlatformId, name: string) => {
     onClearSession(p);
     showToast(`已成功清空「${name}」的独立会话与 Cookie 数据`);
+  };
+
+  const handleCheckUpdate = async () => {
+    setUpdateState('checking');
+    setUpdateErrorMsg(null);
+    try {
+      const info = await triVideoService.checkForUpdates();
+      setUpdateInfo(info);
+      if (info.hasUpdate) {
+        setUpdateState('available');
+      } else {
+        setUpdateState('uptodate');
+      }
+    } catch (err: any) {
+      setUpdateState('error');
+      setUpdateErrorMsg(err?.message || '检查更新失败，请重试');
+    }
+  };
+
+  const handleStartUpdate = async () => {
+    if (!updateInfo) return;
+    setUpdateState('downloading');
+    setDownloadProgress({ percent: 0, transferred: 0, total: 0 });
+
+    const unsubscribe = triVideoService.onUpdateProgress((p) => {
+      setDownloadProgress(p);
+    });
+
+    try {
+      const res = await triVideoService.downloadAndInstallUpdate(updateInfo.downloadUrl || undefined);
+      unsubscribe();
+      if (res.success) {
+        setUpdateState('ready');
+      } else {
+        setUpdateState('error');
+        setUpdateErrorMsg(res.message);
+      }
+    } catch (err: any) {
+      unsubscribe();
+      setUpdateState('error');
+      setUpdateErrorMsg(err?.message || '下载安装包失败');
+    }
   };
 
   return (
@@ -221,6 +279,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             >
               <Shield size={15} />
               <span>架构与安全</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('updates');
+                if (updateState === 'idle') {
+                  handleCheckUpdate();
+                }
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '8px 12px',
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: activeTab === 'updates' ? 'var(--bg-surface)' : 'transparent',
+                color: activeTab === 'updates' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                fontSize: '13px',
+                fontWeight: activeTab === 'updates' ? 600 : 500,
+                textAlign: 'left',
+              }}
+            >
+              <RefreshCw size={15} />
+              <span>覆盖更新</span>
             </button>
           </div>
 
@@ -629,6 +711,276 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
                   <div>
                     <strong>原生播放保护:</strong> 保留平台官方原生播放器，支持 4K/1080P 高清原画、会员特权及弹幕互动
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 4: Software Overwrite Update */}
+            {activeTab === 'updates' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div
+                  style={{
+                    padding: '16px',
+                    borderRadius: 'var(--radius-md)',
+                    backgroundColor: 'var(--bg-surface)',
+                    border: '1px solid var(--border-subtle)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>当前版本: v{updateInfo?.currentVersion || currentVersion}</span>
+                      <span style={{ fontSize: '11px', padding: '1px 7px', borderRadius: 'var(--radius-full)', backgroundColor: 'rgba(0, 174, 236, 0.15)', color: 'var(--accent-primary)', border: '1px solid rgba(0, 174, 236, 0.3)' }}>
+                        正式发布版
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                      三栖视频中心 (TriVideo) 桌面客户端 · 支持多平台聚合与分屏协作
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleCheckUpdate}
+                    disabled={updateState === 'checking' || updateState === 'downloading'}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '8px 14px',
+                      borderRadius: 'var(--radius-md)',
+                      backgroundColor: 'var(--accent-primary)',
+                      color: '#ffffff',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: (updateState === 'checking' || updateState === 'downloading') ? 'not-allowed' : 'pointer',
+                      opacity: (updateState === 'checking' || updateState === 'downloading') ? 0.7 : 1,
+                    }}
+                    className="hover-btn"
+                  >
+                    <RefreshCw size={14} className={updateState === 'checking' ? 'spin-animation' : undefined} />
+                    <span>{updateState === 'checking' ? '正在检查...' : '检查新版本'}</span>
+                  </button>
+                </div>
+
+                {/* Overwrite update status card */}
+                {updateState === 'uptodate' && (
+                  <div
+                    style={{
+                      padding: '14px',
+                      borderRadius: 'var(--radius-md)',
+                      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                      border: '1px solid rgba(16, 185, 129, 0.25)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      color: 'var(--status-success)',
+                    }}
+                  >
+                    <CheckCircle size={18} />
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 600 }}>当前已是最新版本 (v{updateInfo?.currentVersion || currentVersion})</div>
+                      <div style={{ fontSize: '11px', opacity: 0.85, marginTop: '2px' }}>
+                        暂无更新，所有平台分屏与自适应特性已就绪
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {updateState === 'available' && updateInfo && (
+                  <div
+                    style={{
+                      padding: '16px',
+                      borderRadius: 'var(--radius-md)',
+                      backgroundColor: 'var(--bg-surface-active)',
+                      border: '1.5px solid var(--accent-primary)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                          发现新版本: v{updateInfo.latestVersion}
+                        </span>
+                        <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: 'var(--radius-full)', backgroundColor: 'var(--accent-primary)', color: '#fff' }}>
+                          Update
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        发布时间: {new Date(updateInfo.publishedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+
+                    <div style={{ fontSize: '12px', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-card)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', maxHeight: '120px', overflowY: 'auto', whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>
+                      {updateInfo.releaseNotes || '新版本功能优化与体验提升'}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <button
+                        onClick={handleStartUpdate}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '8px 16px',
+                          borderRadius: 'var(--radius-md)',
+                          backgroundColor: 'var(--accent-primary)',
+                          color: '#fff',
+                          fontSize: '13px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                        className="hover-btn"
+                      >
+                        <Download size={15} />
+                        <span>一键覆盖更新</span>
+                      </button>
+
+                      <button
+                        onClick={() => triVideoService.openReleasePage(updateInfo.releaseUrl)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '8px 14px',
+                          borderRadius: 'var(--radius-md)',
+                          backgroundColor: 'var(--bg-surface)',
+                          border: '1px solid var(--border-subtle)',
+                          color: 'var(--text-secondary)',
+                          fontSize: '12px',
+                          cursor: 'pointer',
+                        }}
+                        className="hover-btn"
+                      >
+                        <ExternalLink size={13} />
+                        <span>浏览器查看</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {updateState === 'downloading' && (
+                  <div
+                    style={{
+                      padding: '16px',
+                      borderRadius: 'var(--radius-md)',
+                      backgroundColor: 'var(--bg-surface)',
+                      border: '1px solid var(--border-subtle)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                      <span>正在下载新版本安装包...</span>
+                      <span>{downloadProgress?.percent || 0}%</span>
+                    </div>
+                    {/* Progress Bar Track */}
+                    <div style={{ height: '8px', width: '100%', backgroundColor: 'var(--bg-card)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                      <div
+                        style={{
+                          height: '100%',
+                          width: `${downloadProgress?.percent || 0}%`,
+                          backgroundColor: 'var(--accent-primary)',
+                          transition: 'width 0.2s ease',
+                        }}
+                      />
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>
+                        {downloadProgress ? `${(downloadProgress.transferred / 1024 / 1024).toFixed(1)} MB / ${(downloadProgress.total / 1024 / 1024).toFixed(1)} MB` : '准备中...'}
+                      </span>
+                      <span>下载完成后将自动启动覆盖安装</span>
+                    </div>
+                  </div>
+                )}
+
+                {updateState === 'ready' && (
+                  <div
+                    style={{
+                      padding: '14px',
+                      borderRadius: 'var(--radius-md)',
+                      backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                      border: '1px solid rgba(16, 185, 129, 0.25)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      color: 'var(--status-success)',
+                    }}
+                  >
+                    <CheckCircle size={18} />
+                    <div style={{ fontSize: '13px', fontWeight: 600 }}>
+                      安装包已准备就绪，正在启动覆盖安装向导并关闭当前程序...
+                    </div>
+                  </div>
+                )}
+
+                {updateState === 'error' && (
+                  <div
+                    style={{
+                      padding: '14px',
+                      borderRadius: 'var(--radius-md)',
+                      backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.25)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '6px',
+                      color: 'var(--status-danger)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600 }}>
+                      <AlertCircle size={16} />
+                      <span>更新提示</span>
+                    </div>
+                    <div style={{ fontSize: '12px', opacity: 0.9 }}>
+                      {updateErrorMsg || '网络连接超时或无法连接到更新服务器，建议直接在浏览器下载最新版本。'}
+                    </div>
+                    <button
+                      onClick={() => triVideoService.openReleasePage()}
+                      style={{
+                        marginTop: '4px',
+                        alignSelf: 'flex-start',
+                        padding: '4px 10px',
+                        borderRadius: 'var(--radius-sm)',
+                        backgroundColor: 'var(--bg-surface)',
+                        border: '1px solid var(--border-subtle)',
+                        color: 'var(--text-primary)',
+                        fontSize: '11px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      在 GitHub Releases 手动下载
+                    </button>
+                  </div>
+                )}
+
+                {/* Explanation Card */}
+                <div
+                  style={{
+                    padding: '14px',
+                    borderRadius: 'var(--radius-md)',
+                    backgroundColor: 'var(--bg-surface)',
+                    border: '1px solid var(--border-subtle)',
+                    fontSize: '12px',
+                    color: 'var(--text-secondary)',
+                    lineHeight: 1.6,
+                  }}
+                >
+                  <div style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: '4px' }}>
+                    关于软件覆盖安装机制
+                  </div>
+                  <div>
+                    1. <strong>固定应用全局唯一标识 (GUID):</strong> 保证后续所有版本安装时准确识别已有程序，不会重复产生多个独立版本。
+                  </div>
+                  <div>
+                    2. <strong>就地覆盖与平滑升级:</strong> 新版本安装向导会自动替换旧版本可执行文件与资源，同时完好保留用户配置与已登录的账号状态。
+                  </div>
+                  <div>
+                    3. <strong>桌面与开始菜单快捷方式同步:</strong> 自动将旧快捷方式重定向至最新版本，杜绝桌面上堆积多个版本图标。
                   </div>
                 </div>
               </div>

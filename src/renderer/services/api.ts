@@ -14,6 +14,7 @@ import {
   PaneId,
   SplitConfig,
   SplitBounds,
+  UpdateInfo,
 } from '../../types';
 
 const isElectron = typeof window !== 'undefined' && Boolean(window.triVideoAPI);
@@ -387,6 +388,49 @@ export const triVideoService: ElectronAPI = {
   },
   onThemeChange: (callback: (theme: 'dark' | 'light') => void) => {
     if (isElectron) return window.triVideoAPI.onThemeChange(callback);
+    return () => {};
+  },
+
+  // Software Overwrite Updates
+  checkForUpdates: async (): Promise<UpdateInfo> => {
+    if (isElectron && window.triVideoAPI.checkForUpdates) {
+      return window.triVideoAPI.checkForUpdates();
+    }
+    return {
+      hasUpdate: false,
+      currentVersion: '1.0.2',
+      latestVersion: '1.0.2',
+      releaseName: 'TriVideo v1.0.2',
+      releaseNotes: '当前已是最新版本',
+      releaseUrl: 'https://github.com/krantjohn/trivideo/releases',
+      downloadUrl: null,
+      publishedAt: new Date().toISOString(),
+    };
+  },
+  downloadAndInstallUpdate: async (url?: string): Promise<{ success: boolean; message: string }> => {
+    if (isElectron && window.triVideoAPI.downloadAndInstallUpdate) {
+      return window.triVideoAPI.downloadAndInstallUpdate(url);
+    }
+    return { success: false, message: '请在桌面客户端环境中进行覆盖更新' };
+  },
+  openReleasePage: async (url?: string): Promise<void> => {
+    if (isElectron && window.triVideoAPI.openReleasePage) {
+      return window.triVideoAPI.openReleasePage(url);
+    }
+    if (typeof window !== 'undefined') {
+      window.open(url || 'https://github.com/krantjohn/trivideo/releases', '_blank');
+    }
+  },
+  getAppVersion: async (): Promise<string> => {
+    if (isElectron && window.triVideoAPI.getAppVersion) {
+      return window.triVideoAPI.getAppVersion();
+    }
+    return '1.0.2';
+  },
+  onUpdateProgress: (callback: (progress: { percent: number; transferred: number; total: number }) => void) => {
+    if (isElectron && window.triVideoAPI.onUpdateProgress) {
+      return window.triVideoAPI.onUpdateProgress(callback);
+    }
     return () => {};
   },
 

@@ -1,14 +1,10 @@
 import React from 'react';
 import {
-  Compass,
-  Bookmark,
-  History,
   Settings,
   Sun,
   Moon,
   ChevronLeft,
   ChevronRight,
-  ShieldCheck,
   Tv,
   Flame,
   Layers,
@@ -25,13 +21,11 @@ interface SidebarProps {
   platforms: PlatformConfig[];
   activePlatform: PlatformId;
   onSelectPlatform: (platform: PlatformId) => void;
-  viewMode: ViewMode;
-  onSelectViewMode: (mode: ViewMode) => void;
+  viewMode?: ViewMode;
+  onSelectViewMode?: (mode: ViewMode) => void;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
   onOpenSettings: () => void;
-  bookmarkCount: number;
-  historyCount: number;
   sessionStatuses: Record<PlatformId, PlatformSessionStatus>;
 }
 
@@ -41,17 +35,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
   platforms,
   activePlatform,
   onSelectPlatform,
-  viewMode,
   onSelectViewMode,
   theme,
   onToggleTheme,
   onOpenSettings,
-  bookmarkCount,
-  historyCount,
-  sessionStatuses,
 }) => {
   const currentPlatformConfig = platforms.find((p) => p.id === activePlatform);
-  const currentSession = sessionStatuses[activePlatform];
 
   const getPlatformIcon = (id: PlatformId) => {
     switch (id) {
@@ -185,13 +174,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {platforms.map((p) => {
               const isActive = activePlatform === p.id;
-              const status = sessionStatuses[p.id];
               return (
                 <button
                   key={p.id}
                   onClick={() => {
                     onSelectPlatform(p.id);
-                    onSelectViewMode('platform');
+                    onSelectViewMode?.('platform');
                   }}
                   title={collapsed ? p.name : undefined}
                   style={{
@@ -226,142 +214,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       {p.name}
                     </span>
                   )}
-
-                  {!collapsed && status?.isLoggedIn && (
-                    <span
-                      title="已登录"
-                      style={{
-                        width: '7px',
-                        height: '7px',
-                        borderRadius: '50%',
-                        backgroundColor: 'var(--status-success)',
-                      }}
-                    />
-                  )}
                 </button>
               );
             })}
-          </div>
-        </div>
-
-        {/* Section: Views */}
-        <div>
-          {!collapsed && (
-            <div
-              style={{
-                fontSize: '11px',
-                fontWeight: 600,
-                color: 'var(--text-muted)',
-                padding: '0 8px 6px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
-              内容空间
-            </div>
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <button
-              onClick={() => onSelectViewMode('platform')}
-              title={collapsed ? '原生网页视图' : undefined}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: collapsed ? '10px' : '9px 12px',
-                borderRadius: 'var(--radius-md)',
-                backgroundColor: viewMode === 'platform' ? 'var(--bg-surface)' : 'transparent',
-                color: viewMode === 'platform' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                fontWeight: viewMode === 'platform' ? 600 : 500,
-                fontSize: '13px',
-                justifyContent: collapsed ? 'center' : 'flex-start',
-                border: viewMode === 'platform' ? '1px solid var(--border-normal)' : '1px solid transparent',
-              }}
-              className="nav-btn"
-            >
-              <Compass size={18} />
-              {!collapsed && <span>原网播放浏览</span>}
-            </button>
-
-            <button
-              data-id="btn-favorites"
-              onClick={() => onSelectViewMode('favorites')}
-              title={collapsed ? '我的收藏' : undefined}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: collapsed ? '10px' : '9px 12px',
-                borderRadius: 'var(--radius-md)',
-                backgroundColor: viewMode === 'favorites' ? 'var(--bg-surface)' : 'transparent',
-                color: viewMode === 'favorites' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                fontWeight: viewMode === 'favorites' ? 600 : 500,
-                fontSize: '13px',
-                justifyContent: collapsed ? 'center' : 'flex-start',
-                border: viewMode === 'favorites' ? '1px solid var(--border-normal)' : '1px solid transparent',
-              }}
-              className="nav-btn"
-            >
-              <Bookmark size={18} />
-              {!collapsed && (
-                <>
-                  <span style={{ flex: 1, textAlign: 'left' }}>我的收藏</span>
-                  {bookmarkCount > 0 && (
-                    <span
-                      style={{
-                        padding: '1px 6px',
-                        fontSize: '11px',
-                        borderRadius: 'var(--radius-full)',
-                        backgroundColor: 'var(--bg-surface-active)',
-                        color: 'var(--text-muted)',
-                      }}
-                    >
-                      {bookmarkCount}
-                    </span>
-                  )}
-                </>
-              )}
-            </button>
-
-            <button
-              data-id="btn-history"
-              onClick={() => onSelectViewMode('history')}
-              title={collapsed ? '播放历史' : undefined}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: collapsed ? '10px' : '9px 12px',
-                borderRadius: 'var(--radius-md)',
-                backgroundColor: viewMode === 'history' ? 'var(--bg-surface)' : 'transparent',
-                color: viewMode === 'history' ? 'var(--text-primary)' : 'var(--text-secondary)',
-                fontWeight: viewMode === 'history' ? 600 : 500,
-                fontSize: '13px',
-                justifyContent: collapsed ? 'center' : 'flex-start',
-                border: viewMode === 'history' ? '1px solid var(--border-normal)' : '1px solid transparent',
-              }}
-              className="nav-btn"
-            >
-              <History size={18} />
-              {!collapsed && (
-                <>
-                  <span style={{ flex: 1, textAlign: 'left' }}>播放历史</span>
-                  {historyCount > 0 && (
-                    <span
-                      style={{
-                        padding: '1px 6px',
-                        fontSize: '11px',
-                        borderRadius: 'var(--radius-full)',
-                        backgroundColor: 'var(--bg-surface-active)',
-                        color: 'var(--text-muted)',
-                      }}
-                    >
-                      {historyCount}
-                    </span>
-                  )}
-                </>
-              )}
-            </button>
           </div>
         </div>
 
@@ -392,7 +247,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   key={cat.id}
                   onClick={() => {
-                    onSelectViewMode('platform');
+                    onSelectViewMode?.('platform');
                     triVideoService.navigate(cat.url);
                   }}
                   style={{
@@ -427,28 +282,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           gap: '8px',
         }}
       >
-        {/* Session Isolation Status Pill */}
-        {!collapsed && (
-          <div
-            style={{
-              padding: '6px 8px',
-              borderRadius: 'var(--radius-sm)',
-              backgroundColor: 'var(--bg-surface)',
-              border: '1px solid var(--border-subtle)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '11px',
-              color: 'var(--text-muted)',
-            }}
-          >
-            <ShieldCheck size={14} color="var(--status-success)" />
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {currentSession?.isLoggedIn ? '已登录 · 独立会话保护' : '独立安全沙箱运行中'}
-            </span>
-          </div>
-        )}
-
         <div
           style={{
             display: 'flex',

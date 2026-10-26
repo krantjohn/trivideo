@@ -105,6 +105,19 @@ const api: ElectronAPI = {
     };
   },
 
+  // Software Overwrite Updates
+  checkForUpdates: () => ipcRenderer.invoke('updater:check'),
+  downloadAndInstallUpdate: (url?: string) => ipcRenderer.invoke('updater:download', url),
+  openReleasePage: (url?: string) => ipcRenderer.invoke('updater:openReleasePage', url),
+  getAppVersion: () => ipcRenderer.invoke('updater:getVersion'),
+  onUpdateProgress: (callback: (progress: { percent: number; transferred: number; total: number }) => void) => {
+    const handler = (_: any, progress: { percent: number; transferred: number; total: number }) => callback(progress);
+    ipcRenderer.on('updater:download-progress', handler);
+    return () => {
+      ipcRenderer.removeListener('updater:download-progress', handler);
+    };
+  },
+
   // Window Controls
   minimizeWindow: () => ipcRenderer.invoke('window:minimize'),
   maximizeWindow: () => ipcRenderer.invoke('window:maximize'),

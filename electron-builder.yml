@@ -23,7 +23,14 @@ nsis:
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: 三栖视频中心
+  guid: e89f81a6-8025-4c07-b31a-e7c65349b1fa
+  include: build/installer.nsh
+  uninstallDisplayName: ${productName}
   deleteAppDataOnUninstall: false
   artifactName: ${productName}-Setup-${version}.${ext}
 portable:
   artifactName: ${productName}-Portable-${version}.${ext}
+publish:
+  provider: github
+  owner: krantjohn
+  repo: trivideo

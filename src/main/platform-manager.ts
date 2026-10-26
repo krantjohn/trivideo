@@ -359,6 +359,33 @@ export class PlatformManager {
       }
     });
 
+    // Responsive adaptation for platforms (especially Bilibili in split screen)
+    if (platform === 'bilibili') {
+      const injectBiliStyles = () => {
+        if (typeof (wc as any).insertCSS === 'function') {
+          (wc as any).insertCSS(`
+            /* TriVideo split-screen adaptive styles for Bilibili */
+            html, body {
+              min-width: 0 !important;
+              max-width: 100% !important;
+              overflow-x: hidden !important;
+            }
+            #i_cecream, #app, .bili-layout, .bili-feed4, #biliMainHeader, .bili-header, .video-container-v1, .bpx-player-container {
+              max-width: 100% !important;
+              min-width: 0 !important;
+              box-sizing: border-box !important;
+            }
+          `).catch(() => {});
+        }
+        const b = this.getPlatformBounds(platform);
+        this.applyAdaptiveZoom('bilibili', b.width);
+      };
+
+      wc.on('dom-ready', injectBiliStyles);
+      wc.on('did-finish-load', injectBiliStyles);
+      wc.on('did-navigate', injectBiliStyles);
+    }
+
     wc.on('enter-html-full-screen', () => {
       this.handleEnterFullScreen(platform);
     });
@@ -723,6 +750,7 @@ export class PlatformManager {
             width: Math.max(0, winBounds.width),
             height: Math.max(0, winBounds.height),
           });
+          this.applyAdaptiveZoom(p, winBounds.width);
         } else {
           view.webContents.setAudioMuted(true);
           if (contentView.children.includes(view)) {
@@ -769,6 +797,7 @@ export class PlatformManager {
             width: Math.max(0, Math.round(this.singleBounds.width)),
             height: Math.max(0, Math.round(this.singleBounds.height)),
           });
+          this.applyAdaptiveZoom(p, this.singleBounds.width);
         } else {
           view.webContents.setAudioMuted(true);
           view.webContents.executeJavaScript(
@@ -819,6 +848,7 @@ export class PlatformManager {
         width: Math.max(0, Math.round(bounds.width)),
         height: Math.max(0, Math.round(bounds.height)),
       });
+      this.applyAdaptiveZoom(pane.platform, bounds.width);
     }
 
     // Detach and pause views not present in active layout
@@ -836,6 +866,68 @@ export class PlatformManager {
         }
         view.setBounds({ x: -10000, y: -10000, width: 0, height: 0 });
       }
+    }
+  }
+
+  public getPlatformBounds(platform: PlatformId): ContentBounds {
+    if (this.isFullscreen) {
+      if (this.mainWindow && !this.mainWindow.isDestroyed()) {
+        const b = this.mainWindow.getContentBounds();
+        return { x: 0, y: 0, width: b.width, height: b.height };
+      }
+      return this.singleBounds;
+    }
+    if (this.layoutMode === 'single') {
+      return this.singleBounds;
+    }
+    const visiblePanes = this.getVisiblePanes();
+    const pane = visiblePanes.find((p) => p.platform === platform);
+    if (pane) {
+      const b = this.paneBounds.get(pane.id);
+      if (b && b.width > 0) return b;
+      if (pane.id === 'pane-1') return this.leftBounds;
+      if (pane.id === 'pane-2') return this.rightBounds;
+    }
+    return this.singleBounds;
+  }
+
+  public static calculateAdaptiveZoomFactor(platform: PlatformId, width: number): number {
+    if (platform === 'bilibili') {
+      const BILI_BASE_WIDTH = 1100;
+      if (width > 0 && width < BILI_BASE_WIDTH) {
+        return Math.min(1.0, Math.max(0.25, Math.round((width / BILI_BASE_WIDTH) * 1000) / 1000));
+      }
+      return 1.0;
+    }
+    return 1.0;
+  }
+
+  public applyAdaptiveZoom(platform: PlatformId, width: number): void {
+    const view = this.platformViews.get(platform);
+    if (!view || !view.webContents) return;
+    if (typeof (view.webContents as any).setZoomFactor !== 'function') return;
+
+    const factor = PlatformManager.calculateAdaptiveZoomFactor(platform, width);
+    try {
+      (view.webContents as any).setZoomFactor(factor);
+    } catch {}
+
+    if (platform === 'bilibili') {
+      try {
+        view.webContents.executeJavaScript('try { window.dispatchEvent(new Event("resize")); } catch(e){}').catch(() => {});
+      } catch {}
+    }
+  }
+
+  public getPlatformZoomFactor(platform: PlatformId): number {
+    const view = this.platformViews.get(platform);
+    if (!view || !view.webContents || typeof (view.webContents as any).getZoomFactor !== 'function') {
+      return 1.0;
+    }
+    try {
+      return (view.webContents as any).getZoomFactor() || 1.0;
+    } catch {
+      return 1.0;
     }
   }
 
