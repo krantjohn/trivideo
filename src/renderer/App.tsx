@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { TopNav } from './components/TopNav';
-import { CategoryBar } from './components/CategoryBar';
 import { SettingsModal } from './components/SettingsModal';
 import { OnboardingModal } from './components/OnboardingModal';
 import { SplitView } from './components/SplitView';
@@ -17,14 +16,16 @@ import {
   PaneId,
   SplitConfig,
   ContentBounds,
+  ThemeId,
 } from '../types';
+import { resolveWallpaperUrl } from './assets/CatAssets';
 
 export const App: React.FC = () => {
   const [platforms, setPlatforms] = useState<PlatformConfig[]>([]);
   const [activePlatform, setActivePlatform] = useState<PlatformId>('bilibili');
   const [viewMode, setViewMode] = useState<ViewMode>('platform');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<ThemeId>('dark');
   const [settings, setSettings] = useState<AppSettings>({
     theme: 'dark',
     lastPlatform: 'bilibili',
@@ -72,6 +73,20 @@ export const App: React.FC = () => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
+  // Sync custom background and frosted glass attributes to root html element
+  useEffect(() => {
+    const activeBgUrl = resolveWallpaperUrl(settings.customBgImage);
+    if (settings.customBgEnabled && activeBgUrl) {
+      document.documentElement.setAttribute('data-custom-bg', 'true');
+      document.documentElement.style.setProperty('--custom-bg-blur', `${settings.customBgBlur ?? 16}px`);
+      document.documentElement.style.setProperty('--custom-bg-opacity', `${settings.customBgOpacity ?? 0.65}`);
+    } else {
+      document.documentElement.removeAttribute('data-custom-bg');
+      document.documentElement.style.removeProperty('--custom-bg-blur');
+      document.documentElement.style.removeProperty('--custom-bg-opacity');
+    }
+  }, [settings.customBgEnabled, settings.customBgImage, settings.customBgBlur, settings.customBgOpacity]);
+
   // Initial load
   useEffect(() => {
     async function init() {
@@ -86,7 +101,9 @@ export const App: React.FC = () => {
         setPlatforms(loadedPlatforms);
         if (loadedSettings) {
           setSettings(loadedSettings);
-          setTheme(loadedSettings.theme === 'light' ? 'light' : 'dark');
+          if (loadedSettings.theme) {
+            setTheme(loadedSettings.theme);
+          }
           setSidebarCollapsed(Boolean(loadedSettings.sidebarCollapsed));
           if (loadedSettings.platformSetupCompleted === false) {
             setIsWizardOpen(true);
@@ -116,6 +133,10 @@ export const App: React.FC = () => {
 
   // Listeners for window events & navigation state
   useEffect(() => {
+    const unsubTheme = triVideoService.onThemeChange((newTheme: ThemeId) => {
+      setTheme(newTheme);
+    });
+
     const unsubNav = triVideoService.onNavigationStateChange((state: NavigationState) => {
       setNavState(state);
     });
@@ -134,6 +155,7 @@ export const App: React.FC = () => {
     });
 
     return () => {
+      unsubTheme();
       unsubNav();
       unsubMax();
       unsubFs();
@@ -322,9 +344,11 @@ export const App: React.FC = () => {
   };
 
   const handleToggleTheme = () => {
-    const newTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
-    triVideoService.updateSettings({ theme: newTheme });
+    const themeCycle: ThemeId[] = ['dark', 'light', 'cat', 'cyberpunk', 'forest', 'sunset', 'nordic', 'sakura'];
+    const currentIndex = themeCycle.indexOf(theme);
+    const nextTheme = currentIndex !== -1 ? themeCycle[(currentIndex + 1) % themeCycle.length] : 'dark';
+    setTheme(nextTheme);
+    triVideoService.updateSettings({ theme: nextTheme });
   };
 
   const handleToggleCollapse = () => {
@@ -332,12 +356,6 @@ export const App: React.FC = () => {
     setSidebarCollapsed(next);
     triVideoService.updateSettings({ sidebarCollapsed: next });
     setTimeout(updateContentBounds, 100);
-  };
-
-  const handleCategorySelect = (url: string) => {
-    setViewMode('platform');
-    triVideoService.setViewMode('platform');
-    triVideoService.navigate(url);
   };
 
   const handleSearch = async (query: string) => {
@@ -400,7 +418,7 @@ export const App: React.FC = () => {
       }
       return next;
     });
-    if (updated.theme) setTheme(updated.theme === 'light' ? 'light' : 'dark');
+    if (updated.theme) setTheme(updated.theme);
     triVideoService.updateSettings(updated);
   };
 
@@ -420,9 +438,36 @@ export const App: React.FC = () => {
   };
 
   const currentPlatformConfig = platforms.find((p) => p.id === activePlatform) || platforms[0];
+  const activeBgUrl = resolveWallpaperUrl(settings.customBgImage);
 
   return (
-    <div className="app-container">
+    <div className="app-container" style={{ position: 'relative' }}>
+      {/* Custom Background & Frosted Acrylic Layer */}
+      {settings.customBgEnabled && activeBgUrl && (
+        <div
+          className="app-custom-bg-root"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundImage: `url("${activeBgUrl}")`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            zIndex: 0,
+            pointerEvents: 'none',
+          }}
+        >
+          {/* Tint overlay preserving text contrast while frosted chrome blurs over it */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: 'var(--bg-primary)',
+              opacity: settings.customBgOpacity ?? 0.65,
+            }}
+          />
+        </div>
+      )}
+
       {/* Sidebar */}
       <Sidebar
         collapsed={sidebarCollapsed}
@@ -439,7 +484,7 @@ export const App: React.FC = () => {
       />
 
       {/* Main Content Column */}
-      <div className="main-column">
+      <div className="main-column" style={{ position: 'relative', zIndex: 1 }}>
         {/* Top Platform and Navigation Bar */}
         <TopNav
           platforms={visiblePlatforms}
@@ -460,16 +505,8 @@ export const App: React.FC = () => {
           onClose={() => triVideoService.closeWindow()}
           layoutMode={layoutMode}
           onToggleLayoutMode={handleToggleLayoutMode}
+          theme={theme}
         />
-
-        {/* Category & Channel Bar (only in single platform mode) */}
-        {currentPlatformConfig && layoutMode === 'single' && (
-          <CategoryBar
-            currentPlatform={currentPlatformConfig}
-            onSelectCategory={handleCategorySelect}
-            currentUrl={navState.currentUrl}
-          />
-        )}
 
         {/* Toast Notification */}
         {toastMessage && (

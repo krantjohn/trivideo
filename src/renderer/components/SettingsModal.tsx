@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   X,
   Settings,
@@ -17,9 +17,19 @@ import {
   Download,
   ExternalLink,
   AlertCircle,
+  Image as ImageIcon,
+  Upload,
+  Sun,
+  Moon,
+  Zap,
+  Trees,
+  Sunset,
+  RotateCcw,
+  Sliders,
 } from 'lucide-react';
-import { AppSettings, PlatformId, PlatformSessionStatus, UpdateInfo } from '../../types';
+import { AppSettings, PlatformId, PlatformSessionStatus, UpdateInfo, ThemeId } from '../../types';
 import { triVideoService } from '../services/api';
+import { CAT_WALLPAPERS, CatPawIcon } from '../assets/CatAssets';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -46,6 +56,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [updateState, setUpdateState] = useState<'idle' | 'checking' | 'available' | 'uptodate' | 'downloading' | 'ready' | 'error'>('idle');
   const [downloadProgress, setDownloadProgress] = useState<{ percent: number; transferred: number; total: number } | null>(null);
   const [updateErrorMsg, setUpdateErrorMsg] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [customUrlInput, setCustomUrlInput] = useState('');
 
   useEffect(() => {
     triVideoService.getAppVersion().then((v) => {
@@ -150,8 +162,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     >
       <div
         style={{
-          width: '640px',
-          maxHeight: '80vh',
+          width: '740px',
+          maxHeight: '85vh',
           backgroundColor: 'var(--bg-card)',
           borderRadius: 'var(--radius-xl)',
           border: '1px solid var(--border-normal)',
@@ -475,116 +487,604 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             )}
 
             {/* TAB 1: General */}
-            {activeTab === 'general' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                <div>
-                  <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                    界面外观主题
-                  </h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                    <button
-                      onClick={() => onUpdateSettings({ theme: 'dark' })}
-                      style={{
-                        padding: '12px',
-                        borderRadius: 'var(--radius-md)',
-                        backgroundColor: settings.theme === 'dark' ? 'var(--bg-surface-active)' : 'var(--bg-surface)',
-                        border: settings.theme === 'dark' ? '2px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '6px',
-                        color: 'var(--text-primary)',
-                      }}
-                    >
-                      <span style={{ fontSize: '13px', fontWeight: 600 }}>深色沉浸模式</span>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>护眼低眩光 深灰精调色调</span>
-                    </button>
+            {activeTab === 'general' && (() => {
+              const THEMES: {
+                id: ThemeId;
+                name: string;
+                tag: string;
+                desc: string;
+                colors: [string, string, string];
+                icon: React.ReactNode;
+              }[] = [
+                {
+                  id: 'cat',
+                  name: '猫咪治愈',
+                  tag: '温暖治愈',
+                  desc: '温暖奶杏米白 · 肉垫珊瑚粉 · 萌猫相伴',
+                  colors: ['#FDF6EE', '#F6EBD9', '#FF758F'],
+                  icon: <CatPawIcon size={16} color="#FF758F" />,
+                },
+                {
+                  id: 'cyberpunk',
+                  name: '赛博霓虹',
+                  tag: '极客电竞',
+                  desc: '暗夜紫魅幻境 · 荧光青蓝 · 赛博高亮',
+                  colors: ['#090714', '#181432', '#00F0FF'],
+                  icon: <Zap size={16} color="#00F0FF" />,
+                },
+                {
+                  id: 'forest',
+                  name: '森林抹茶',
+                  tag: '自然禅意',
+                  desc: '沉静幽深墨绿 · 抹茶清韵 · 护眼森系',
+                  colors: ['#0D1613', '#1B2C25', '#52B788'],
+                  icon: <Trees size={16} color="#52B788" />,
+                },
+                {
+                  id: 'sunset',
+                  name: '晚霞暮色',
+                  tag: '夕阳余晖',
+                  desc: '黄昏紫夜霞光 · 余晖暖橙 · 晚风治愈',
+                  colors: ['#150F1B', '#281C34', '#F97316'],
+                  icon: <Sunset size={16} color="#F97316" />,
+                },
+                {
+                  id: 'nordic',
+                  name: '北欧冷灰',
+                  tag: '质感极简',
+                  desc: '莫兰迪深冷灰 · 极地冰蓝 · 高级沉着',
+                  colors: ['#12151B', '#202630', '#38BDF8'],
+                  icon: <Sparkles size={16} color="#38BDF8" />,
+                },
+                {
+                  id: 'sakura',
+                  name: '樱花二次元',
+                  tag: '梦幻动漫',
+                  desc: '浪漫粉白轻柔 · 樱落烂漫 · 梦幻唯美',
+                  colors: ['#FFF5F8', '#FCE0EB', '#FF758C'],
+                  icon: <Sparkles size={16} color="#FF758C" />,
+                },
+                {
+                  id: 'dark',
+                  name: '深色沉浸',
+                  tag: '经典深色',
+                  desc: '护眼低眩光 · 深灰精调色调 · 沉浸观影',
+                  colors: ['#121316', '#202228', '#3B82F6'],
+                  icon: <Moon size={16} color="#3B82F6" />,
+                },
+                {
+                  id: 'light',
+                  name: '清新浅色',
+                  tag: '经典浅色',
+                  desc: '明亮通透 · 现代办公风格 · 清爽素雅',
+                  colors: ['#F6F7FA', '#FFFFFF', '#2563EB'],
+                  icon: <Sun size={16} color="#2563EB" />,
+                },
+              ];
 
-                    <button
-                      onClick={() => onUpdateSettings({ theme: 'light' })}
-                      style={{
-                        padding: '12px',
-                        borderRadius: 'var(--radius-md)',
-                        backgroundColor: settings.theme === 'light' ? 'var(--bg-surface-active)' : 'var(--bg-surface)',
-                        border: settings.theme === 'light' ? '2px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '6px',
-                        color: 'var(--text-primary)',
-                      }}
-                    >
-                      <span style={{ fontSize: '13px', fontWeight: 600 }}>清新浅色模式</span>
-                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>明亮通透 现代办公风格</span>
-                    </button>
-                  </div>
-                </div>
+              const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                if (!file.type.startsWith('image/')) {
+                  showToast('请选择有效的图片文件 (PNG/JPG/WEBP/GIF)');
+                  return;
+                }
+                // Reset input so re-selecting the same file fires onChange
+                e.target.value = '';
 
-                <div>
-                  <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
-                    默认启动平台
-                  </h4>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                    {enabledPlatformList.map((p) => {
-                      const selected = settings.lastPlatform === p.id;
-                      return (
-                        <button
-                          key={p.id}
-                          onClick={() => onUpdateSettings({ lastPlatform: p.id })}
-                          style={{
-                            flex: 1,
-                            minWidth: '80px',
-                            padding: '8px 12px',
-                            borderRadius: 'var(--radius-md)',
-                            backgroundColor: selected ? 'var(--bg-surface-active)' : 'var(--bg-surface)',
-                            border: selected ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
-                            color: 'var(--text-primary)',
-                            fontSize: '12px',
-                            fontWeight: selected ? 600 : 500,
-                          }}
-                        >
-                          {p.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                const reader = new FileReader();
+                reader.onload = () => {
+                  const rawDataUrl = reader.result as string;
+                  const img = new Image();
+                  img.onload = () => {
+                    const MAX_WIDTH = 1920;
+                    const MAX_HEIGHT = 1080;
+                    let width = img.width;
+                    let height = img.height;
 
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 14px',
-                    borderRadius: 'var(--radius-md)',
-                    backgroundColor: 'var(--bg-surface)',
-                    border: '1px solid var(--border-subtle)',
-                  }}
-                >
+                    if (width > MAX_WIDTH || height > MAX_HEIGHT || file.size > 500 * 1024) {
+                      if (width / MAX_WIDTH > height / MAX_HEIGHT) {
+                        height = Math.round((height * MAX_WIDTH) / width);
+                        width = MAX_WIDTH;
+                      } else {
+                        width = Math.round((width * MAX_HEIGHT) / height);
+                        height = MAX_HEIGHT;
+                      }
+
+                      const canvas = document.createElement('canvas');
+                      canvas.width = width;
+                      canvas.height = height;
+                      const ctx = canvas.getContext('2d');
+                      if (ctx) {
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const compressed = canvas.toDataURL('image/jpeg', 0.85);
+                        onUpdateSettings({
+                          customBgEnabled: true,
+                          customBgImage: compressed,
+                        });
+                        showToast('已成功载入本地自定义背景图！');
+                        return;
+                      }
+                    }
+
+                    onUpdateSettings({
+                      customBgEnabled: true,
+                      customBgImage: rawDataUrl,
+                    });
+                    showToast('已成功载入本地自定义背景图！');
+                  };
+                  img.onerror = () => {
+                    onUpdateSettings({
+                      customBgEnabled: true,
+                      customBgImage: rawDataUrl,
+                    });
+                    showToast('已载入本地背景图');
+                  };
+                  img.src = rawDataUrl;
+                };
+                reader.readAsDataURL(file);
+              };
+
+              const handleApplyUrl = () => {
+                const trimmed = customUrlInput.trim();
+                if (!trimmed) return;
+                onUpdateSettings({
+                  customBgEnabled: true,
+                  customBgImage: trimmed,
+                });
+                setCustomUrlInput('');
+                showToast('已应用自定义背景图片 URL');
+              };
+
+              const handleClearCustomBg = () => {
+                onUpdateSettings({
+                  customBgEnabled: false,
+                  customBgImage: '',
+                });
+                showToast('已恢复系统默认背景');
+              };
+
+              return (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+                  {/* 1. Theme Color Presets */}
                   <div>
-                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
-                      窗口失焦或后台静音
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Palette size={15} color="var(--accent-primary)" />
+                        <span>界面外观与配色主题 (8大精选方案)</span>
+                      </h4>
+                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                        当前: {THEMES.find((t) => t.id === settings.theme)?.name || settings.theme}
+                      </span>
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                      当切换至其他程序或窗口失焦时，自动静音网页播放声音
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                      {THEMES.map((t) => {
+                        const isSelected = settings.theme === t.id;
+                        return (
+                          <button
+                            key={t.id}
+                            onClick={() => {
+                              onUpdateSettings({ theme: t.id });
+                              showToast(`已切换为「${t.name}」主题`);
+                            }}
+                            style={{
+                              padding: '10px 12px',
+                              borderRadius: 'var(--radius-md)',
+                              backgroundColor: isSelected ? 'var(--bg-surface-active)' : 'var(--bg-surface)',
+                              border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                              boxShadow: isSelected ? 'var(--shadow-sm)' : 'none',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '6px',
+                              textAlign: 'left',
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease-out',
+                            }}
+                            className="hover-btn"
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  {t.icon}
+                                </div>
+                                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                  {t.name}
+                                </span>
+                              </div>
+                              <span
+                                style={{
+                                  fontSize: '10px',
+                                  padding: '1px 6px',
+                                  borderRadius: 'var(--radius-full)',
+                                  backgroundColor: isSelected ? 'var(--accent-primary)' : 'var(--bg-surface-hover)',
+                                  color: isSelected ? '#ffffff' : 'var(--text-muted)',
+                                  fontWeight: 500,
+                                }}
+                              >
+                                {t.tag}
+                              </span>
+                            </div>
+
+                            <div style={{ fontSize: '11px', color: 'var(--text-muted)', lineHeight: '1.3' }}>
+                              {t.desc}
+                            </div>
+
+                            {/* Color preview dots */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                              <div
+                                style={{
+                                  width: '14px',
+                                  height: '14px',
+                                  borderRadius: 'var(--radius-full)',
+                                  backgroundColor: t.colors[0],
+                                  border: '1px solid rgba(128,128,128,0.25)',
+                                }}
+                                title="底色"
+                              />
+                              <div
+                                style={{
+                                  width: '14px',
+                                  height: '14px',
+                                  borderRadius: 'var(--radius-full)',
+                                  backgroundColor: t.colors[1],
+                                  border: '1px solid rgba(128,128,128,0.25)',
+                                }}
+                                title="卡片色"
+                              />
+                              <div
+                                style={{
+                                  width: '14px',
+                                  height: '14px',
+                                  borderRadius: 'var(--radius-full)',
+                                  backgroundColor: t.colors[2],
+                                  border: '1px solid rgba(128,128,128,0.25)',
+                                  boxShadow: `0 0 4px ${t.colors[2]}66`,
+                                }}
+                                title="高亮点缀色"
+                              />
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                  <button
-                    onClick={() => onUpdateSettings({ muteOnBackground: !settings.muteOnBackground })}
+
+                  {/* 2. Custom Background & Frosted Glass Blur */}
+                  <div
                     style={{
-                      padding: '5px 14px',
-                      borderRadius: 'var(--radius-full)',
-                      backgroundColor: settings.muteOnBackground ? 'var(--accent-primary)' : 'var(--bg-surface-active)',
-                      color: settings.muteOnBackground ? '#fff' : 'var(--text-muted)',
-                      fontSize: '12px',
-                      fontWeight: 600,
+                      padding: '14px',
+                      borderRadius: 'var(--radius-lg)',
+                      backgroundColor: 'var(--bg-surface)',
+                      border: '1px solid var(--border-subtle)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px',
                     }}
                   >
-                    {settings.muteOnBackground ? '已开启' : '已关闭'}
-                  </button>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <ImageIcon size={16} color="var(--accent-primary)" />
+                        <div>
+                          <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                            自定义背景图与磨砂高斯模糊
+                          </div>
+                          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            为侧边栏、顶部导航及底栏赋予毛玻璃磨砂（Glass Acrylic）通透质感
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          const nextState = !settings.customBgEnabled;
+                          onUpdateSettings({
+                            customBgEnabled: nextState,
+                            // If enabling without an image, default to the first cute cat wallpaper
+                            customBgImage: nextState && !settings.customBgImage ? CAT_WALLPAPERS[0].id : settings.customBgImage,
+                          });
+                          showToast(nextState ? '已启用磨砂背景效果' : '已关闭磨砂背景');
+                        }}
+                        style={{
+                          padding: '5px 14px',
+                          borderRadius: 'var(--radius-full)',
+                          backgroundColor: settings.customBgEnabled ? 'var(--accent-primary)' : 'var(--bg-surface-active)',
+                          color: settings.customBgEnabled ? '#fff' : 'var(--text-muted)',
+                          fontSize: '12px',
+                          fontWeight: 600,
+                        }}
+                      >
+                        {settings.customBgEnabled ? '已开启磨砂' : '点击开启'}
+                      </button>
+                    </div>
+
+                    {settings.customBgEnabled && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '6px' }}>
+                        {/* Preset Wallpapers */}
+                        <div>
+                          <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                            精选猫咪高清壁纸预设:
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                            {CAT_WALLPAPERS.map((wp) => {
+                              const isSelected = settings.customBgImage === wp.id || settings.customBgImage === wp.url;
+                              return (
+                                <div
+                                  key={wp.id}
+                                  onClick={() => {
+                                    onUpdateSettings({
+                                      customBgEnabled: true,
+                                      customBgImage: wp.id,
+                                    });
+                                    showToast(`已应用「${wp.name}」壁纸`);
+                                  }}
+                                  style={{
+                                    borderRadius: 'var(--radius-md)',
+                                    overflow: 'hidden',
+                                    border: isSelected ? '2px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                                    cursor: 'pointer',
+                                    backgroundColor: 'var(--bg-card)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    transition: 'all 0.15s',
+                                  }}
+                                  className="hover-btn"
+                                >
+                                  <div style={{ height: '62px', width: '100%', overflow: 'hidden', position: 'relative' }}>
+                                    <img
+                                      src={wp.url}
+                                      alt={wp.name}
+                                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    />
+                                    {isSelected && (
+                                      <div
+                                        style={{
+                                          position: 'absolute',
+                                          top: '4px',
+                                          right: '4px',
+                                          backgroundColor: 'var(--accent-primary)',
+                                          borderRadius: 'var(--radius-full)',
+                                          padding: '2px',
+                                          color: '#fff',
+                                          display: 'flex',
+                                        }}
+                                      >
+                                        <CheckCircle size={12} />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div style={{ padding: '6px 8px' }}>
+                                    <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                                      {wp.name}
+                                    </div>
+                                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>
+                                      {wp.tag}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Local Upload & URL Input */}
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleFileUpload}
+                            style={{ display: 'none' }}
+                          />
+                          <button
+                            onClick={() => fileInputRef.current?.click()}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '8px 12px',
+                              borderRadius: 'var(--radius-md)',
+                              backgroundColor: 'var(--bg-surface-active)',
+                              border: '1px solid var(--border-normal)',
+                              color: 'var(--text-primary)',
+                              fontSize: '12px',
+                              fontWeight: 500,
+                              whiteSpace: 'nowrap',
+                            }}
+                            className="hover-btn"
+                          >
+                            <Upload size={14} />
+                            <span>上传本地图片</span>
+                          </button>
+
+                          <div style={{ flex: 1, display: 'flex', gap: '6px' }}>
+                            <input
+                              type="text"
+                              value={customUrlInput}
+                              onChange={(e) => setCustomUrlInput(e.target.value)}
+                              placeholder="粘贴网络图片 URL (例如 https://...)"
+                              style={{
+                                flex: 1,
+                                padding: '6px 10px',
+                                borderRadius: 'var(--radius-md)',
+                                backgroundColor: 'var(--bg-input)',
+                                border: '1px solid var(--border-subtle)',
+                                color: 'var(--text-primary)',
+                                fontSize: '12px',
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleApplyUrl();
+                              }}
+                            />
+                            <button
+                              onClick={handleApplyUrl}
+                              disabled={!customUrlInput.trim()}
+                              style={{
+                                padding: '6px 12px',
+                                borderRadius: 'var(--radius-md)',
+                                backgroundColor: customUrlInput.trim() ? 'var(--accent-primary)' : 'var(--bg-surface-active)',
+                                color: customUrlInput.trim() ? '#fff' : 'var(--text-muted)',
+                                fontSize: '12px',
+                                fontWeight: 500,
+                                cursor: customUrlInput.trim() ? 'pointer' : 'default',
+                              }}
+                            >
+                              应用
+                            </button>
+                          </div>
+
+                          <button
+                            onClick={handleClearCustomBg}
+                            title="恢复默认无底图"
+                            style={{
+                              padding: '8px 10px',
+                              borderRadius: 'var(--radius-md)',
+                              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                              color: 'var(--status-danger)',
+                              border: '1px solid rgba(239, 68, 68, 0.25)',
+                              fontSize: '12px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                            className="hover-btn"
+                          >
+                            <RotateCcw size={13} />
+                            <span>重置</span>
+                          </button>
+                        </div>
+
+                        {/* Sliders for Blur and Opacity */}
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: '14px',
+                            padding: '10px 12px',
+                            borderRadius: 'var(--radius-md)',
+                            backgroundColor: 'var(--bg-card)',
+                            border: '1px solid var(--border-subtle)',
+                          }}
+                        >
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                              <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Sliders size={13} color="var(--accent-primary)" />
+                                <span>磨砂高斯模糊 (Gaussian Blur)</span>
+                              </span>
+                              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--accent-primary)' }}>
+                                {settings.customBgBlur ?? 16}px
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min={0}
+                              max={30}
+                              step={1}
+                              value={settings.customBgBlur ?? 16}
+                              onChange={(e) => onUpdateSettings({ customBgBlur: Number(e.target.value) })}
+                              style={{ width: '100%', cursor: 'pointer' }}
+                            />
+                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                              0px 为原图清晰，16px 为适中磨砂，30px 为深度雾化
+                            </div>
+                          </div>
+
+                          <div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                              <span style={{ fontSize: '12px', fontWeight: 500, color: 'var(--text-secondary)' }}>
+                                磨砂遮罩透明度 (Mask Opacity)
+                              </span>
+                              <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--accent-primary)' }}>
+                                {Math.round((settings.customBgOpacity ?? 0.65) * 100)}%
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min={0.1}
+                              max={0.9}
+                              step={0.05}
+                              value={settings.customBgOpacity ?? 0.65}
+                              onChange={(e) => onUpdateSettings({ customBgOpacity: Number(e.target.value) })}
+                              style={{ width: '100%', cursor: 'pointer' }}
+                            />
+                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                              数值越高文字对比度越强，越低背景通透感越高
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 3. Startup platform */}
+                  <div>
+                    <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', marginBottom: '8px' }}>
+                      默认启动平台
+                    </h4>
+                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      {enabledPlatformList.map((p) => {
+                        const selected = settings.lastPlatform === p.id;
+                        return (
+                          <button
+                            key={p.id}
+                            onClick={() => onUpdateSettings({ lastPlatform: p.id })}
+                            style={{
+                              flex: 1,
+                              minWidth: '80px',
+                              padding: '8px 12px',
+                              borderRadius: 'var(--radius-md)',
+                              backgroundColor: selected ? 'var(--bg-surface-active)' : 'var(--bg-surface)',
+                              border: selected ? '1.5px solid var(--accent-primary)' : '1px solid var(--border-subtle)',
+                              color: 'var(--text-primary)',
+                              fontSize: '12px',
+                              fontWeight: selected ? 600 : 500,
+                            }}
+                          >
+                            {p.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 4. Background mute */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '12px 14px',
+                      borderRadius: 'var(--radius-md)',
+                      backgroundColor: 'var(--bg-surface)',
+                      border: '1px solid var(--border-subtle)',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                        窗口失焦或后台静音
+                      </div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        当切换至其他程序或窗口失焦时，自动静音网页播放声音
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => onUpdateSettings({ muteOnBackground: !settings.muteOnBackground })}
+                      style={{
+                        padding: '5px 14px',
+                        borderRadius: 'var(--radius-full)',
+                        backgroundColor: settings.muteOnBackground ? 'var(--accent-primary)' : 'var(--bg-surface-active)',
+                        color: settings.muteOnBackground ? '#fff' : 'var(--text-muted)',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {settings.muteOnBackground ? '已开启' : '已关闭'}
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* TAB 2: Sessions */}
             {activeTab === 'sessions' && (

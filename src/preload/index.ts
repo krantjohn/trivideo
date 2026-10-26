@@ -12,6 +12,7 @@ import {
   PaneId,
   SplitConfig,
   SplitBounds,
+  ThemeId,
 } from '../types';
 
 const api: ElectronAPI = {
@@ -97,8 +98,8 @@ const api: ElectronAPI = {
   // Settings & Theme
   getSettings: () => ipcRenderer.invoke('storage:getSettings'),
   updateSettings: (settings: Partial<AppSettings>) => ipcRenderer.invoke('storage:updateSettings', settings),
-  onThemeChange: (callback: (theme: 'dark' | 'light') => void) => {
-    const handler = (_: any, theme: 'dark' | 'light') => callback(theme);
+  onThemeChange: (callback: (theme: ThemeId) => void) => {
+    const handler = (_: any, theme: ThemeId) => callback(theme);
     ipcRenderer.on('theme:changed', handler);
     return () => {
       ipcRenderer.removeListener('theme:changed', handler);

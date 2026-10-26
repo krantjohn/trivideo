@@ -22,7 +22,9 @@ import {
   NavigationState,
   PlatformSessionStatus,
   LayoutMode,
+  ThemeId,
 } from '../../types';
+import { CatPawIcon } from '../assets/CatAssets';
 
 interface TopNavProps {
   platforms: PlatformConfig[];
@@ -43,6 +45,7 @@ interface TopNavProps {
   onClose: () => void;
   layoutMode?: LayoutMode;
   onToggleLayoutMode?: (mode: LayoutMode) => void;
+  theme?: ThemeId;
 }
 
 export const TopNav: React.FC<TopNavProps> = ({
@@ -63,6 +66,7 @@ export const TopNav: React.FC<TopNavProps> = ({
   onClose,
   layoutMode = 'single',
   onToggleLayoutMode,
+  theme,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -129,6 +133,9 @@ export const TopNav: React.FC<TopNavProps> = ({
               }}
               className="platform-tab-btn"
             >
+              {isActive && theme === 'cat' && (
+                <CatPawIcon size={14} color={p.brandColor} />
+              )}
               <span>{p.name}</span>
             </button>
           );
@@ -295,7 +302,7 @@ export const TopNav: React.FC<TopNavProps> = ({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="搜索 (Enter)..."
+          placeholder={theme === 'cat' ? "全网聚合搜喵... 🐾 (Enter)" : "搜索 (Enter)..."}
           style={{
             flex: 1,
             background: 'transparent',

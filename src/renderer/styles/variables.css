@@ -19,9 +19,13 @@
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-normal: 250ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-smooth: 350ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Frosted Glass Defaults */
+  --custom-bg-blur: 16px;
+  --custom-bg-opacity: 0.65;
 }
 
-/* Dark Theme (Default) */
+/* 1. Dark Theme (默认深色沉浸) */
 [data-theme='dark'] {
   --bg-primary: #121316;
   --bg-secondary: #18191e;
@@ -53,9 +57,13 @@
   --status-success: #10b981;
   --status-warning: #f59e0b;
   --status-danger: #ef4444;
+
+  --bg-glass-sidebar: rgba(24, 25, 30, 0.72);
+  --bg-glass-header: rgba(24, 25, 30, 0.75);
+  --bg-glass-card: rgba(32, 34, 40, 0.85);
 }
 
-/* Light Theme */
+/* 2. Light Theme (清新浅色) */
 [data-theme='light'] {
   --bg-primary: #f6f7fa;
   --bg-secondary: #edf0f5;
@@ -87,4 +95,236 @@
   --status-success: #059669;
   --status-warning: #d97706;
   --status-danger: #dc2626;
+
+  --bg-glass-sidebar: rgba(237, 240, 245, 0.72);
+  --bg-glass-header: rgba(237, 240, 245, 0.75);
+  --bg-glass-card: rgba(255, 255, 255, 0.85);
+}
+
+/* 3. Cat Theme (温暖治愈猫咪) */
+[data-theme='cat'] {
+  --bg-primary: #fdf6ee;
+  --bg-secondary: #f6ebd9;
+  --bg-surface: #fffbf5;
+  --bg-surface-hover: #fae4d7;
+  --bg-surface-active: #f7d5c3;
+  --bg-elevated: #ffffff;
+  --bg-input: #f5e8da;
+  --bg-card: #fffcf8;
+
+  --border-subtle: #eed8c7;
+  --border-normal: #e2c4b0;
+  --border-highlight: #ff758f;
+
+  --text-primary: #3d2b20;
+  --text-secondary: #6e5241;
+  --text-muted: #9b7a67;
+  --text-disabled: #cbb4a6;
+
+  --accent-primary: #ff758f;
+  --accent-primary-hover: #ff4d6d;
+  --accent-primary-glow: rgba(255, 117, 143, 0.35);
+
+  --shadow-sm: 0 1px 4px rgba(130, 80, 50, 0.08);
+  --shadow-md: 0 4px 14px rgba(130, 80, 50, 0.12);
+  --shadow-lg: 0 10px 24px rgba(130, 80, 50, 0.15);
+  --shadow-card: 0 2px 10px rgba(130, 80, 50, 0.08);
+
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-danger: #ef4444;
+
+  --bg-glass-sidebar: rgba(246, 235, 217, 0.72);
+  --bg-glass-header: rgba(246, 235, 217, 0.75);
+  --bg-glass-card: rgba(255, 251, 245, 0.85);
+}
+
+/* 4. Cyberpunk Theme (赛博霓虹) */
+[data-theme='cyberpunk'] {
+  --bg-primary: #090714;
+  --bg-secondary: #100d23;
+  --bg-surface: #181432;
+  --bg-surface-hover: #231d47;
+  --bg-surface-active: #312863;
+  --bg-elevated: #1e193d;
+  --bg-input: #130f29;
+  --bg-card: #15112e;
+
+  --border-subtle: #2a2155;
+  --border-normal: #3f317b;
+  --border-highlight: #00f0ff;
+
+  --text-primary: #f2efff;
+  --text-secondary: #aa9ed2;
+  --text-muted: #72649d;
+  --text-disabled: #4e4470;
+
+  --accent-primary: #00f0ff;
+  --accent-primary-hover: #4df4ff;
+  --accent-primary-glow: rgba(0, 240, 255, 0.45);
+
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 16px rgba(0, 240, 255, 0.2);
+  --shadow-lg: 0 10px 28px rgba(255, 0, 127, 0.25);
+  --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.45);
+
+  --status-success: #00ff9d;
+  --status-warning: #ffb703;
+  --status-danger: #ff0055;
+
+  --bg-glass-sidebar: rgba(16, 13, 35, 0.72);
+  --bg-glass-header: rgba(16, 13, 35, 0.75);
+  --bg-glass-card: rgba(24, 20, 50, 0.85);
+}
+
+/* 5. Forest Zen Theme (森林抹茶) */
+[data-theme='forest'] {
+  --bg-primary: #0d1613;
+  --bg-secondary: #13201b;
+  --bg-surface: #1b2c25;
+  --bg-surface-hover: #243c33;
+  --bg-surface-active: #2e4d41;
+  --bg-elevated: #20352d;
+  --bg-input: #162520;
+  --bg-card: #182722;
+
+  --border-subtle: #23372f;
+  --border-normal: #2e493e;
+  --border-highlight: #52b788;
+
+  --text-primary: #ebf5f0;
+  --text-secondary: #97b5a5;
+  --text-muted: #648273;
+  --text-disabled: #44594f;
+
+  --accent-primary: #52b788;
+  --accent-primary-hover: #74c69d;
+  --accent-primary-glow: rgba(82, 183, 136, 0.35);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.35);
+
+  --status-success: #40916c;
+  --status-warning: #e9c46a;
+  --status-danger: #e63946;
+
+  --bg-glass-sidebar: rgba(19, 32, 27, 0.72);
+  --bg-glass-header: rgba(19, 32, 27, 0.75);
+  --bg-glass-card: rgba(27, 44, 37, 0.85);
+}
+
+/* 6. Sunset Ember Theme (晚霞暮色) */
+[data-theme='sunset'] {
+  --bg-primary: #150f1b;
+  --bg-secondary: #1d1526;
+  --bg-surface: #281c34;
+  --bg-surface-hover: #362646;
+  --bg-surface-active: #47325b;
+  --bg-elevated: #2e203c;
+  --bg-input: #20172b;
+  --bg-card: #241930;
+
+  --border-subtle: #362446;
+  --border-normal: #4d3363;
+  --border-highlight: #f97316;
+
+  --text-primary: #faedf3;
+  --text-secondary: #c2a6b8;
+  --text-muted: #846b7c;
+  --text-disabled: #5a4855;
+
+  --accent-primary: #f97316;
+  --accent-primary-hover: #fb923c;
+  --accent-primary-glow: rgba(249, 115, 22, 0.38);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 14px rgba(249, 115, 22, 0.15);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.35);
+
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-danger: #ef4444;
+
+  --bg-glass-sidebar: rgba(29, 21, 38, 0.72);
+  --bg-glass-header: rgba(29, 21, 38, 0.75);
+  --bg-glass-card: rgba(40, 28, 52, 0.85);
+}
+
+/* 7. Nordic Slate Theme (北欧极简冷灰) */
+[data-theme='nordic'] {
+  --bg-primary: #12151b;
+  --bg-secondary: #181d24;
+  --bg-surface: #202630;
+  --bg-surface-hover: #29313d;
+  --bg-surface-active: #343e4e;
+  --bg-elevated: #242b37;
+  --bg-input: #1a2028;
+  --bg-card: #1c222c;
+
+  --border-subtle: #28303d;
+  --border-normal: #374254;
+  --border-highlight: #38bdf8;
+
+  --text-primary: #e6ebf2;
+  --text-secondary: #94a2b6;
+  --text-muted: #647388;
+  --text-disabled: #465161;
+
+  --accent-primary: #38bdf8;
+  --accent-primary-hover: #60a5fa;
+  --accent-primary-glow: rgba(56, 189, 248, 0.3);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+  --shadow-lg: 0 10px 24px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.3);
+
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-danger: #ef4444;
+
+  --bg-glass-sidebar: rgba(24, 29, 36, 0.72);
+  --bg-glass-header: rgba(24, 29, 36, 0.75);
+  --bg-glass-card: rgba(32, 38, 48, 0.85);
+}
+
+/* 8. Sakura Anime Theme (樱花二次元) */
+[data-theme='sakura'] {
+  --bg-primary: #fff5f8;
+  --bg-secondary: #fae7ee;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #fce0eb;
+  --bg-surface-active: #f7c9dc;
+  --bg-elevated: #ffffff;
+  --bg-input: #fbf0f4;
+  --bg-card: #ffffff;
+
+  --border-subtle: #f3d0df;
+  --border-normal: #e8b1ca;
+  --border-highlight: #ff758c;
+
+  --text-primary: #452435;
+  --text-secondary: #7e5369;
+  --text-muted: #aa8195;
+  --text-disabled: #ccaebf;
+
+  --accent-primary: #ff758c;
+  --accent-primary-hover: #ff5470;
+  --accent-primary-glow: rgba(255, 117, 140, 0.35);
+
+  --shadow-sm: 0 1px 3px rgba(180, 80, 120, 0.08);
+  --shadow-md: 0 4px 14px rgba(180, 80, 120, 0.12);
+  --shadow-lg: 0 10px 24px rgba(180, 80, 120, 0.16);
+  --shadow-card: 0 2px 10px rgba(180, 80, 120, 0.06);
+
+  --status-success: #10b981;
+  --status-warning: #f59e0b;
+  --status-danger: #ef4444;
+
+  --bg-glass-sidebar: rgba(250, 231, 238, 0.72);
+  --bg-glass-header: rgba(250, 231, 238, 0.75);
+  --bg-glass-card: rgba(255, 255, 255, 0.85);
 }

@@ -73,8 +73,19 @@ export interface HistoryItem {
   visitedAt: number;
 }
 
+export type ThemeId =
+  | 'dark'
+  | 'light'
+  | 'cat'
+  | 'cyberpunk'
+  | 'forest'
+  | 'sunset'
+  | 'nordic'
+  | 'sakura'
+  | 'system';
+
 export interface AppSettings {
-  theme: 'dark' | 'light' | 'system';
+  theme: ThemeId;
   lastPlatform: PlatformId;
   sidebarCollapsed: boolean;
   hardwareAcceleration: boolean;
@@ -85,6 +96,10 @@ export interface AppSettings {
   enabledPlatformIds?: PlatformId[];
   platformSetupCompleted?: boolean;
   splitConfig?: SplitConfig;
+  customBgEnabled?: boolean;
+  customBgImage?: string;
+  customBgBlur?: number;
+  customBgOpacity?: number;
 }
 
 export interface NavigationState {
@@ -183,7 +198,7 @@ export interface ElectronAPI {
   // Settings & Theme
   getSettings: () => Promise<AppSettings>;
   updateSettings: (settings: Partial<AppSettings>) => Promise<AppSettings>;
-  onThemeChange: (callback: (theme: 'dark' | 'light') => void) => () => void;
+  onThemeChange: (callback: (theme: ThemeId) => void) => () => void;
 
   // Software Overwrite Updates
   checkForUpdates: () => Promise<UpdateInfo>;

@@ -90,3 +90,52 @@ input {
   overflow: hidden;
   background-color: var(--bg-primary);
 }
+
+/* Custom Background & Frosted Glass Support */
+[data-custom-bg="true"] body,
+[data-custom-bg="true"] .app-container,
+[data-custom-bg="true"] .main-column,
+[data-custom-bg="true"] .content-viewport {
+  background-color: transparent !important;
+}
+
+[data-custom-bg="true"] .sidebar {
+  background-color: var(--bg-glass-sidebar) !important;
+  backdrop-filter: blur(var(--custom-bg-blur, 16px));
+  -webkit-backdrop-filter: blur(var(--custom-bg-blur, 16px));
+}
+
+[data-custom-bg="true"] header.drag-region {
+  background-color: var(--bg-glass-header) !important;
+  backdrop-filter: blur(var(--custom-bg-blur, 16px));
+  -webkit-backdrop-filter: blur(var(--custom-bg-blur, 16px));
+}
+
+.cat-companion-card:hover {
+  border-color: var(--accent-primary) !important;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md) !important;
+}
+
+[data-custom-bg="true"] .cat-companion-card {
+  background-color: var(--bg-glass-card) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Sleeping Cat Zzz floating animation */
+@keyframes floatZ {
+  0% {
+    transform: translateY(0) scale(0.9);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-5px) scale(1.1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(-10px) scale(0.9);
+    opacity: 0.2;
+  }
+}
+

@@ -11,9 +11,24 @@ import {
   Sparkles,
   Youtube,
   Video,
+  Zap,
+  Trees,
+  Sunset,
 } from 'lucide-react';
-import { PlatformId, PlatformConfig, ViewMode, PlatformSessionStatus } from '../../types';
-import { triVideoService } from '../services/api';
+import { PlatformId, PlatformConfig, ViewMode, PlatformSessionStatus, ThemeId } from '../../types';
+import { CatPawIcon, CatCompanionWidget } from '../assets/CatAssets';
+
+const THEME_INFO: Record<ThemeId, { name: string; icon: React.ReactNode }> = {
+  cat: { name: '猫咪治愈', icon: <CatPawIcon size={18} color="var(--accent-primary)" /> },
+  cyberpunk: { name: '赛博霓虹', icon: <Zap size={18} color="var(--accent-primary)" /> },
+  forest: { name: '森林抹茶', icon: <Trees size={18} color="var(--accent-primary)" /> },
+  sunset: { name: '晚霞暮色', icon: <Sunset size={18} color="var(--accent-primary)" /> },
+  nordic: { name: '北欧冷灰', icon: <Sparkles size={18} color="var(--accent-primary)" /> },
+  sakura: { name: '樱花二次元', icon: <Sparkles size={18} color="var(--accent-primary)" /> },
+  light: { name: '清新浅色', icon: <Sun size={18} /> },
+  dark: { name: '深色沉浸', icon: <Moon size={18} /> },
+  system: { name: '跟随系统', icon: <Moon size={18} /> },
+};
 
 interface SidebarProps {
   collapsed: boolean;
@@ -23,7 +38,7 @@ interface SidebarProps {
   onSelectPlatform: (platform: PlatformId) => void;
   viewMode?: ViewMode;
   onSelectViewMode?: (mode: ViewMode) => void;
-  theme: 'dark' | 'light';
+  theme: ThemeId;
   onToggleTheme: () => void;
   onOpenSettings: () => void;
   sessionStatuses: Record<PlatformId, PlatformSessionStatus>;
@@ -40,8 +55,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onToggleTheme,
   onOpenSettings,
 }) => {
-  const currentPlatformConfig = platforms.find((p) => p.id === activePlatform);
-
   const getPlatformIcon = (id: PlatformId) => {
     switch (id) {
       case 'douyin':
@@ -98,24 +111,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
               width: '34px',
               height: '34px',
               borderRadius: 'var(--radius-md)',
-              background: 'linear-gradient(135deg, #00AEEC 0%, #FE2C55 50%, #FF2442 100%)',
+              background: theme === 'cat'
+                ? 'linear-gradient(135deg, #f4a261 0%, #e76f51 50%, #ff758f 100%)'
+                : 'linear-gradient(135deg, #00AEEC 0%, #FE2C55 50%, #FF2442 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               color: '#ffffff',
-              boxShadow: '0 2px 8px rgba(0, 174, 236, 0.3)',
+              boxShadow: theme === 'cat'
+                ? '0 2px 8px rgba(255, 117, 143, 0.4)'
+                : '0 2px 8px rgba(0, 174, 236, 0.3)',
               flexShrink: 0,
             }}
           >
-            <Layers size={20} />
+            {theme === 'cat' ? <CatPawIcon size={20} color="#ffffff" /> : <Layers size={20} />}
           </div>
 
           {!collapsed && (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-              <span style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '0.3px' }}>
-                三栖视频中心
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '0.3px' }}>
+                  三栖视频中心
+                </span>
+                {theme === 'cat' && <span style={{ fontSize: '13px' }}>🐾</span>}
+              </div>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                {theme === 'cat' ? 'Neko Cat Edition' : 'TriVideo Hub'}
               </span>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>TriVideo Hub</span>
             </div>
           )}
         </div>
@@ -220,54 +242,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
 
-        {/* Section: Platform Categories Summary */}
-        {!collapsed && currentPlatformConfig && (
-          <div>
-            <div
-              style={{
-                fontSize: '11px',
-                fontWeight: 600,
-                color: 'var(--text-muted)',
-                padding: '0 8px 6px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}
-            >
-              {currentPlatformConfig.name} 分类推荐
-            </div>
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '4px',
-                padding: '0 4px',
-              }}
-            >
-              {currentPlatformConfig.categories.slice(0, 6).map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    onSelectViewMode?.('platform');
-                    triVideoService.navigate(cat.url);
-                  }}
-                  style={{
-                    padding: '6px 8px',
-                    fontSize: '12px',
-                    borderRadius: 'var(--radius-sm)',
-                    backgroundColor: 'var(--bg-surface)',
-                    color: 'var(--text-secondary)',
-                    textAlign: 'center',
-                    border: '1px solid var(--border-subtle)',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}
-                  className="cat-pill"
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
+        {/* Cute Cat Companion Widget - shown in Cat Theme */}
+        {theme === 'cat' && (
+          <div style={{ marginTop: 'auto', paddingTop: '10px' }}>
+            <CatCompanionWidget collapsed={collapsed} theme={theme} />
           </div>
         )}
       </div>
@@ -292,7 +270,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <button
             onClick={onToggleTheme}
-            title={theme === 'dark' ? '切换为浅色主题' : '切换为深色主题'}
+            title={`当前主题: ${THEME_INFO[theme]?.name || theme} (点击切换)`}
             style={{
               padding: '8px',
               borderRadius: 'var(--radius-md)',
@@ -303,7 +281,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             }}
             className="hover-btn"
           >
-            {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            {THEME_INFO[theme]?.icon || <Moon size={18} />}
           </button>
 
           <button

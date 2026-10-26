@@ -21,6 +21,10 @@ const DEFAULT_SETTINGS: AppSettings = {
   muteOnBackground: false,
   enabledPlatformIds: [...ALL_PLATFORM_IDS],
   platformSetupCompleted: false,
+  customBgEnabled: false,
+  customBgImage: '',
+  customBgBlur: 16,
+  customBgOpacity: 0.65,
 };
 
 export class StorageManager {
@@ -247,6 +251,12 @@ export class StorageManager {
     }
     if (nextSettings.enabledPlatformIds && !nextSettings.enabledPlatformIds.includes(nextSettings.lastPlatform)) {
       nextSettings.lastPlatform = nextSettings.enabledPlatformIds[0];
+    }
+    if (partial.customBgBlur !== undefined) {
+      nextSettings.customBgBlur = Math.max(0, Math.min(50, Number(partial.customBgBlur) || 0));
+    }
+    if (partial.customBgOpacity !== undefined) {
+      nextSettings.customBgOpacity = Math.max(0, Math.min(1, Number(partial.customBgOpacity) || 0));
     }
     this.data.settings = nextSettings;
     this.saveData();

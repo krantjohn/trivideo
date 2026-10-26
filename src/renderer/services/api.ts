@@ -15,6 +15,7 @@ import {
   SplitConfig,
   SplitBounds,
   UpdateInfo,
+  ThemeId,
 } from '../../types';
 
 const isElectron = typeof window !== 'undefined' && Boolean(window.triVideoAPI);
@@ -386,7 +387,7 @@ export const triVideoService: ElectronAPI = {
     mockSettings = { ...mockSettings, ...settings };
     return mockSettings;
   },
-  onThemeChange: (callback: (theme: 'dark' | 'light') => void) => {
+  onThemeChange: (callback: (theme: ThemeId) => void) => {
     if (isElectron) return window.triVideoAPI.onThemeChange(callback);
     return () => {};
   },
