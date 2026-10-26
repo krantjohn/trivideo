@@ -1,5 +1,5 @@
 appId: com.trivideo.app
-productName: 三栖视频中心
+productName: 同画
 artifactName: ${productName}-${version}-${os}-${arch}.${ext}
 directories:
   output: release
@@ -22,7 +22,7 @@ nsis:
   allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
-  shortcutName: 三栖视频中心
+  shortcutName: 同画
   guid: 9a0860ac-5b35-56d3-9062-a2697b0588fb
   include: build/installer.nsh
   uninstallDisplayName: ${productName}

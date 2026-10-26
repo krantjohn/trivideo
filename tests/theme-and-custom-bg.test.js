@@ -148,13 +148,11 @@ test('SettingsModal & Components: Theme picker and Frosted Background controls',
   const sidebarCode = fs.readFileSync(path.join(__dirname, '../src/renderer/components/Sidebar.tsx'), 'utf-8');
   const topNavCode = fs.readFileSync(path.join(__dirname, '../src/renderer/components/TopNav.tsx'), 'utf-8');
 
-  // SettingsModal Theme Picker
-  assert.ok(settingsModalCode.includes('猫咪治愈'), 'SettingsModal must have 猫咪治愈 theme');
-  assert.ok(settingsModalCode.includes('赛博霓虹'), 'SettingsModal must have 赛博霓虹 theme');
-  assert.ok(settingsModalCode.includes('森林抹茶'), 'SettingsModal must have 森林抹茶 theme');
-  assert.ok(settingsModalCode.includes('晚霞暮色'), 'SettingsModal must have 晚霞暮色 theme');
-  assert.ok(settingsModalCode.includes('北欧冷灰'), 'SettingsModal must have 北欧冷灰 theme');
-  assert.ok(settingsModalCode.includes('樱花二次元'), 'SettingsModal must have 樱花二次元 theme');
+  // SettingsModal Theme Picker (v1.5: Adventure, Dark, Light, Sakura)
+  assert.ok(settingsModalCode.includes('羊皮纸冒险'), 'SettingsModal must have 羊皮纸冒险 theme');
+  assert.ok(settingsModalCode.includes('深色沉浸'), 'SettingsModal must have 深色沉浸 theme');
+  assert.ok(settingsModalCode.includes('清新浅色'), 'SettingsModal must have 清新浅色 theme');
+  assert.ok(settingsModalCode.includes('浪漫樱粉'), 'SettingsModal must have 浪漫樱粉 theme');
 
   // SettingsModal Custom Background Controls
   assert.ok(settingsModalCode.includes('自定义背景图与磨砂高斯模糊'), 'Must include custom background section');

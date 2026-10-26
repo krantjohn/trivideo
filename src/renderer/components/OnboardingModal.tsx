@@ -132,7 +132,7 @@ export const OnboardingModal: React.FC<OnboardingModalProps> = ({
             </div>
             <div>
               <h2 style={{ fontSize: '19px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                欢迎使用 TriVideo 三栖视频中心
+                欢迎使用 同画 (TongHua)
               </h2>
               <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                 首次启动向导 · 常用平台配置

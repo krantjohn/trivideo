@@ -21,15 +21,12 @@ import {
   Upload,
   Sun,
   Moon,
-  Zap,
-  Trees,
-  Sunset,
   RotateCcw,
   Sliders,
 } from 'lucide-react';
 import { AppSettings, PlatformId, PlatformSessionStatus, UpdateInfo, ThemeId } from '../../types';
 import { triVideoService } from '../services/api';
-import { CAT_WALLPAPERS, CatPawIcon } from '../assets/CatAssets';
+import { CAT_WALLPAPERS } from '../assets/CatAssets';
 import { WaxSealIcon } from '../assets/AdventureAssets';
 
 interface SettingsModalProps {
@@ -189,7 +186,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, fontSize: '16px' }}>
             <Settings size={18} color="var(--accent-primary)" />
-            <span>三栖视频中心 · 应用设置</span>
+            <span>同画 · 应用设置</span>
           </div>
           <button
             data-id="btn-close-modal"
@@ -507,68 +504,28 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   icon: <WaxSealIcon size={16} />,
                 },
                 {
-                  id: 'cat',
-                  name: '猫咪治愈',
-                  tag: '温暖治愈',
-                  desc: '温暖奶杏米白 · 肉垫珊瑚粉 · 萌猫相伴',
-                  colors: ['#FDF6EE', '#F6EBD9', '#FF758F'],
-                  icon: <CatPawIcon size={16} color="#FF758F" />,
-                },
-                {
-                  id: 'cyberpunk',
-                  name: '赛博霓虹',
-                  tag: '极客电竞',
-                  desc: '暗夜紫魅幻境 · 荧光青蓝 · 赛博高亮',
-                  colors: ['#090714', '#181432', '#00F0FF'],
-                  icon: <Zap size={16} color="#00F0FF" />,
-                },
-                {
-                  id: 'forest',
-                  name: '森林抹茶',
-                  tag: '自然禅意',
-                  desc: '沉静幽深墨绿 · 抹茶清韵 · 护眼森系',
-                  colors: ['#0D1613', '#1B2C25', '#52B788'],
-                  icon: <Trees size={16} color="#52B788" />,
-                },
-                {
-                  id: 'sunset',
-                  name: '晚霞暮色',
-                  tag: '夕阳余晖',
-                  desc: '黄昏紫夜霞光 · 余晖暖橙 · 晚风治愈',
-                  colors: ['#150F1B', '#281C34', '#F97316'],
-                  icon: <Sunset size={16} color="#F97316" />,
-                },
-                {
-                  id: 'nordic',
-                  name: '北欧冷灰',
-                  tag: '质感极简',
-                  desc: '莫兰迪深冷灰 · 极地冰蓝 · 高级沉着',
-                  colors: ['#12151B', '#202630', '#38BDF8'],
-                  icon: <Sparkles size={16} color="#38BDF8" />,
-                },
-                {
-                  id: 'sakura',
-                  name: '樱花二次元',
-                  tag: '梦幻动漫',
-                  desc: '浪漫粉白轻柔 · 樱落烂漫 · 梦幻唯美',
-                  colors: ['#FFF5F8', '#FCE0EB', '#FF758C'],
-                  icon: <Sparkles size={16} color="#FF758C" />,
-                },
-                {
                   id: 'dark',
                   name: '深色沉浸',
-                  tag: '经典深色',
-                  desc: '护眼低眩光 · 深灰精调色调 · 沉浸观影',
+                  tag: '纯黑护眼',
+                  desc: '经典深黑石墨质感，极致专注防眩光',
                   colors: ['#121316', '#202228', '#3B82F6'],
                   icon: <Moon size={16} color="#3B82F6" />,
                 },
                 {
                   id: 'light',
                   name: '清新浅色',
-                  tag: '经典浅色',
+                  tag: '纯白极简',
                   desc: '明亮通透 · 现代办公风格 · 清爽素雅',
                   colors: ['#F6F7FA', '#FFFFFF', '#2563EB'],
                   icon: <Sun size={16} color="#2563EB" />,
+                },
+                {
+                  id: 'sakura',
+                  name: '浪漫樱粉',
+                  tag: '樱花二次元',
+                  desc: '浪漫粉白轻柔 · 樱落烂漫 · 梦幻唯美',
+                  colors: ['#FFF5F8', '#FCE0EB', '#FF758C'],
+                  icon: <Sparkles size={16} color="#FF758C" />,
                 },
               ];
 
@@ -661,7 +618,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                       <h4 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <Palette size={15} color="var(--accent-primary)" />
-                        <span>界面外观与配色主题 (9大精选方案)</span>
+                        <span>界面外观与配色主题 (4大精选方案)</span>
                       </h4>
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
                         当前: {THEMES.find((t) => t.id === settings.theme)?.name || settings.theme}

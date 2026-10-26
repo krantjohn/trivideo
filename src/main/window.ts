@@ -10,6 +10,7 @@ export function createMainWindow(): BrowserWindow {
     height: 900,
     minWidth: 1024,
     minHeight: 650,
+    title: '同画',
     frame: false, // Custom frameless window for sleek native desktop look
     backgroundColor: '#131418',
     show: false, // Don't show until ready-to-show to prevent white flash

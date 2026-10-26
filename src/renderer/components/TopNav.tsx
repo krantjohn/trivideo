@@ -4,8 +4,6 @@ import {
   ArrowRight,
   RotateCw,
   X,
-  Home,
-  ExternalLink,
   Search,
   Minus,
   Square,
@@ -58,8 +56,8 @@ export const TopNav: React.FC<TopNavProps> = ({
   onGoForward,
   onReload,
   onStop,
-  onGoHome,
-  onOpenExternal,
+  onGoHome: _onGoHome,
+  onOpenExternal: _onOpenExternal,
   onSearch,
   isMaximized,
   onMinimize,
@@ -200,40 +198,10 @@ export const TopNav: React.FC<TopNavProps> = ({
           {navState.isLoading ? <X size={15} /> : <RotateCw size={15} />}
         </button>
 
-        <button
-          onClick={onGoHome}
-          title="返回平台首页"
-          style={{
-            padding: '6px',
-            borderRadius: 'var(--radius-sm)',
-            color: 'var(--text-secondary)',
-          }}
-          className="hover-btn"
-        >
-          <Home size={15} />
-        </button>
+        
       </div>
 
-      {/* 3. Action Buttons: External */}
-      <div className="no-drag" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-
-        <button
-          onClick={onOpenExternal}
-          title="在系统浏览器中打开当前页面"
-          style={{
-            padding: '7px 8px',
-            borderRadius: 'var(--radius-md)',
-            backgroundColor: 'var(--bg-surface)',
-            border: '1px solid var(--border-subtle)',
-            color: 'var(--text-secondary)',
-            display: 'flex',
-            alignItems: 'center',
-          }}
-          className="hover-btn"
-        >
-          <ExternalLink size={14} />
-        </button>
-      </div>
+      
 
       {/* 4. Error Indicator & Flexible Center Spacer */}
       {navState.hasError && (

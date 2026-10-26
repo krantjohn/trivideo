@@ -1,7 +1,7 @@
 {
   "name": "trivideo",
-  "version": "1.0.4",
-  "description": "三栖视频中心 (TriVideo) - 抖音、哔哩哔哩、小红书三平台聚合桌面客户端",
+  "version": "1.5.0",
+  "description": "同画 (TongHua) - 多平台视频聚合与同屏创作桌面客户端",
   "main": "dist/main/main.js",
   "author": "TriVideo Team",
   "license": "MIT",

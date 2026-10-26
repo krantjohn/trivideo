@@ -126,19 +126,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
               flexShrink: 0,
             }}
           >
-            {theme === 'cat' ? <CatPawIcon size={20} color="#ffffff" /> : <Layers size={20} />}
+            {theme === 'adventure' ? <WaxSealIcon size={22} /> : theme === 'cat' ? <CatPawIcon size={20} color="#ffffff" /> : <Layers size={20} />}
           </div>
 
           {!collapsed && (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span style={{ fontSize: '15px', fontWeight: 700, letterSpacing: '0.3px' }}>
-                  三栖视频中心
+                  同画
                 </span>
                 {theme === 'cat' && <span style={{ fontSize: '13px' }}>🐾</span>}
               </div>
               <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                {theme === 'cat' ? 'Neko Cat Edition' : 'TriVideo Hub'}
+                {theme === 'adventure' ? 'Parchment Edition' : 'TongHua Studio'}
               </span>
             </div>
           )}

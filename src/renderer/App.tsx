@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Download, RefreshCw, X, ArrowUpCircle } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { TopNav } from './components/TopNav';
 import { SettingsModal } from './components/SettingsModal';
@@ -17,6 +18,7 @@ import {
   SplitConfig,
   ContentBounds,
   ThemeId,
+  UpdateInfo,
 } from '../types';
 import { resolveWallpaperUrl } from './assets/CatAssets';
 
@@ -56,6 +58,10 @@ export const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [autoUpdateInfo, setAutoUpdateInfo] = useState<UpdateInfo | null>(null);
+  const [isUpdatePromptOpen, setIsUpdatePromptOpen] = useState(false);
+  const [isAutoDownloading, setIsAutoDownloading] = useState(false);
+  const [autoDownloadProgress, setAutoDownloadProgress] = useState<{ percent: number; transferred: number; total: number } | null>(null);
 
   const [layoutMode, setLayoutMode] = useState<LayoutMode>('single');
   const [splitConfig, setSplitConfig] = useState<SplitConfig>({
@@ -226,6 +232,46 @@ export const App: React.FC = () => {
     };
   }, [updateContentBounds, sidebarCollapsed, viewMode]);
 
+  
+  // Auto check for updates on startup (bypassing caches)
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      try {
+        const info = await triVideoService.checkForUpdates();
+        if (info && info.hasUpdate) {
+          setAutoUpdateInfo(info);
+          setIsUpdatePromptOpen(true);
+        }
+      } catch (err) {
+        console.warn('[AutoUpdateCheck] Error checking update:', err);
+      }
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleTriggerAutoUpdate = async () => {
+    if (!autoUpdateInfo) return;
+    setIsAutoDownloading(true);
+    setAutoDownloadProgress({ percent: 0, transferred: 0, total: 0 });
+
+    const unsubscribe = triVideoService.onUpdateProgress((progress) => {
+      setAutoDownloadProgress(progress);
+    });
+
+    try {
+      const res = await triVideoService.downloadAndInstallUpdate(autoUpdateInfo.downloadUrl || undefined);
+      unsubscribe();
+      if (!res.success) {
+        setIsAutoDownloading(false);
+        showToast(res.message);
+      }
+    } catch (err: any) {
+      unsubscribe();
+      setIsAutoDownloading(false);
+      showToast(err?.message || '下载更新失败');
+    }
+  };
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 2500);
@@ -344,7 +390,7 @@ export const App: React.FC = () => {
   };
 
   const handleToggleTheme = () => {
-    const themeCycle: ThemeId[] = ['dark', 'light', 'cat', 'cyberpunk', 'forest', 'sunset', 'nordic', 'sakura'];
+    const themeCycle: ThemeId[] = ['adventure', 'dark', 'light', 'sakura'];
     const currentIndex = themeCycle.indexOf(theme);
     const nextTheme = currentIndex !== -1 ? themeCycle[(currentIndex + 1) % themeCycle.length] : 'dark';
     setTheme(nextTheme);
@@ -569,6 +615,201 @@ export const App: React.FC = () => {
         onClearSession={handleClearSession}
         onClearAllCache={handleClearAllCache}
       />
+
+
+      {/* Auto Update Prompt Dialog */}
+      {isUpdatePromptOpen && autoUpdateInfo && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.65)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            animation: 'fadeIn 0.2s ease-out',
+          }}
+          onClick={() => !isAutoDownloading && setIsUpdatePromptOpen(false)}
+        >
+          <div
+            className="settings-modal-dialog"
+            style={{
+              width: '520px',
+              backgroundColor: 'var(--bg-card)',
+              borderRadius: 'var(--radius-xl)',
+              border: '1.5px solid var(--border-normal)',
+              boxShadow: 'var(--shadow-lg)',
+              padding: '24px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div
+                  style={{
+                    width: '42px',
+                    height: '42px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                    border: '1px solid rgba(59, 130, 246, 0.3)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--accent-primary)',
+                  }}
+                >
+                  <ArrowUpCircle size={24} />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h3 style={{ fontSize: '17px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                      同画新版本发布
+                    </h3>
+                    <span
+                      style={{
+                        fontSize: '11px',
+                        padding: '2px 8px',
+                        borderRadius: '12px',
+                        backgroundColor: 'var(--accent-primary)',
+                        color: '#FFF',
+                        fontWeight: 600,
+                      }}
+                    >
+                      v{autoUpdateInfo.latestVersion}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    当前安装版本: v{autoUpdateInfo.currentVersion} · 检测到官方最新更新
+                  </div>
+                </div>
+              </div>
+
+              {!isAutoDownloading && (
+                <button
+                  onClick={() => setIsUpdatePromptOpen(false)}
+                  style={{
+                    padding: '6px',
+                    borderRadius: 'var(--radius-sm)',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                  }}
+                  className="hover-btn"
+                >
+                  <X size={18} />
+                </button>
+              )}
+            </div>
+
+            {/* Release notes */}
+            <div
+              style={{
+                backgroundColor: 'var(--bg-input)',
+                borderRadius: 'var(--radius-md)',
+                padding: '12px 14px',
+                border: '1px solid var(--border-subtle)',
+                maxHeight: '160px',
+                overflowY: 'auto',
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+                lineHeight: '1.6',
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {autoUpdateInfo.releaseNotes}
+            </div>
+
+            {/* Download progress if downloading */}
+            {isAutoDownloading && autoDownloadProgress && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  <span>正在极速下载无损覆盖安装包...</span>
+                  <span style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>
+                    {autoDownloadProgress.percent}% ({((autoDownloadProgress.transferred || 0) / (1024 * 1024)).toFixed(1)}MB / {((autoDownloadProgress.total || 0) / (1024 * 1024)).toFixed(1)}MB)
+                  </span>
+                </div>
+                <div
+                  style={{
+                    width: '100%',
+                    height: '8px',
+                    borderRadius: '4px',
+                    backgroundColor: 'var(--bg-input)',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${autoDownloadProgress.percent}%`,
+                      backgroundColor: 'var(--accent-primary)',
+                      borderRadius: '4px',
+                      transition: 'width 0.2s linear',
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
+              {!isAutoDownloading && (
+                <button
+                  onClick={() => setIsUpdatePromptOpen(false)}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-normal)',
+                    color: 'var(--text-secondary)',
+                    fontSize: '13px',
+                    cursor: 'pointer',
+                  }}
+                  className="hover-btn"
+                >
+                  稍后提醒
+                </button>
+              )}
+              <button
+                disabled={isAutoDownloading}
+                onClick={handleTriggerAutoUpdate}
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: 'var(--radius-md)',
+                  backgroundColor: 'var(--accent-primary)',
+                  color: '#FFF',
+                  fontWeight: 600,
+                  fontSize: '13px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  cursor: isAutoDownloading ? 'not-allowed' : 'pointer',
+                  boxShadow: 'var(--shadow-sm)',
+                }}
+                className={theme === 'adventure' ? 'rpg-bevel-btn rpg-btn-green' : 'hover-btn'}
+              >
+                {isAutoDownloading ? (
+                  <>
+                    <RefreshCw size={15} className="spin-animation" />
+                    <span>极速更新中 ({autoDownloadProgress?.percent || 0}%)...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={15} />
+                    <span>立即极速升级</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* First-launch Setup Wizard */}
       <OnboardingModal
