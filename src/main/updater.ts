@@ -44,7 +44,7 @@ export class AppUpdater {
     try {
       this.currentVersion = app.getVersion();
     } catch {
-      this.currentVersion = '1.0.2';
+      this.currentVersion = '1.0.3';
     }
   }
 

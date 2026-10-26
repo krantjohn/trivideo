@@ -399,9 +399,9 @@ export const triVideoService: ElectronAPI = {
     }
     return {
       hasUpdate: false,
-      currentVersion: '1.0.2',
-      latestVersion: '1.0.2',
-      releaseName: 'TriVideo v1.0.2',
+      currentVersion: '1.0.3',
+      latestVersion: '1.0.3',
+      releaseName: 'TriVideo v1.0.3',
       releaseNotes: '当前已是最新版本',
       releaseUrl: 'https://github.com/krantjohn/trivideo/releases',
       downloadUrl: null,
@@ -426,7 +426,7 @@ export const triVideoService: ElectronAPI = {
     if (isElectron && window.triVideoAPI.getAppVersion) {
       return window.triVideoAPI.getAppVersion();
     }
-    return '1.0.2';
+    return '1.0.3';
   },
   onUpdateProgress: (callback: (progress: { percent: number; transferred: number; total: number }) => void) => {
     if (isElectron && window.triVideoAPI.onUpdateProgress) {

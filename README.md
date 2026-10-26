@@ -2,7 +2,7 @@
 
 > 一个为 Windows 10/11 打造的现代化三平台（抖音、哔哩哔哩、小红书）短视频与长视频聚合桌面客户端。
 
-[![Release](https://img.shields.io/badge/Release-v1.0.0-blue.svg)](https://github.com/krantjohn/trivideo/releases)
+[![Release](https://img.shields.io/badge/Release-v1.0.3-blue.svg)](https://github.com/krantjohn/trivideo/releases)
 [![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D6.svg?logo=windows)](https://github.com/krantjohn/trivideo)
 [![Electron](https://img.shields.io/badge/Electron-33.x-47848F.svg?logo=electron)](https://www.electronjs.org/)
 [![React](https://img.shields.io/badge/React-18-61DAFB.svg?logo=react)](https://react.dev/)

@@ -35,6 +35,8 @@ test('Adaptive Zoom: Bilibili scaling calculation for split screens', () => {
 });
 
 test('App Updater: Semantic version comparison', () => {
+  assert.equal(compareVersions('1.0.3', '1.0.2'), 1);
+  assert.equal(compareVersions('1.0.2', '1.0.3'), -1);
   assert.equal(compareVersions('1.0.2', '1.0.1'), 1);
   assert.equal(compareVersions('1.0.1', '1.0.2'), -1);
   assert.equal(compareVersions('1.0.2', '1.0.2'), 0);
