@@ -1,23 +1,28 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('path');
+const fs = require('fs');
 
 // Compile first or require from compiled dist/main
 const { compareVersions } = require('../dist/main/updater');
 const { PlatformManager } = require('../dist/main/platform-manager');
 
 test('Adaptive Zoom: Bilibili scaling calculation for split screens', () => {
-  // At >= 1100px, zoom should be 1.0 (no scaling)
+  // At >= 1160px, zoom should be 1.0 (no scaling needed)
   assert.equal(PlatformManager.calculateAdaptiveZoomFactor('bilibili', 1200), 1.0);
-  assert.equal(PlatformManager.calculateAdaptiveZoomFactor('bilibili', 1100), 1.0);
+  assert.equal(PlatformManager.calculateAdaptiveZoomFactor('bilibili', 1160), 1.0);
 
-  // In split-screen mode (~550px pane width), zoom should scale proportionally to ~0.5
+  // In split-screen mode (~580px pane width), zoom should scale proportionally to 0.5
+  const factor580 = PlatformManager.calculateAdaptiveZoomFactor('bilibili', 580);
+  assert.equal(factor580, 0.5);
+
+  // In typical dual split pane (~550px pane width)
   const factor550 = PlatformManager.calculateAdaptiveZoomFactor('bilibili', 550);
-  assert.equal(factor550, 0.5);
+  assert.ok(factor550 >= 0.47 && factor550 <= 0.48);
 
-  // In narrow split mode (~700px pane width)
+  // In wider split mode (~700px pane width)
   const factor700 = PlatformManager.calculateAdaptiveZoomFactor('bilibili', 700);
-  assert.ok(factor700 >= 0.63 && factor700 <= 0.64);
+  assert.ok(factor700 >= 0.60 && factor700 <= 0.61);
 
   // Clamped to minimum 0.25
   const factor200 = PlatformManager.calculateAdaptiveZoomFactor('bilibili', 200);
@@ -46,7 +51,6 @@ test('App Updater: Semantic version comparison', () => {
 });
 
 test('UI String Cleanup: Removal of redundant text and deprecated tabs', () => {
-  const fs = require('fs');
   const topNavCode = fs.readFileSync(path.join(__dirname, '../src/renderer/components/TopNav.tsx'), 'utf-8');
   const sidebarCode = fs.readFileSync(path.join(__dirname, '../src/renderer/components/Sidebar.tsx'), 'utf-8');
   const categoryBarCode = fs.readFileSync(path.join(__dirname, '../src/renderer/components/CategoryBar.tsx'), 'utf-8');
@@ -70,17 +74,27 @@ test('UI String Cleanup: Removal of redundant text and deprecated tabs', () => {
   // 4. App.tsx does not mount FavoritesView or HistoryView
   assert.ok(!appCode.includes('<FavoritesView'), 'App.tsx must not render FavoritesView');
   assert.ok(!appCode.includes('<HistoryView'), 'App.tsx must not render HistoryView');
+
+  // 5. Dead component files completely deleted
+  assert.ok(!fs.existsSync(path.join(__dirname, '../src/renderer/components/FavoritesView.tsx')), 'FavoritesView.tsx must be deleted');
+  assert.ok(!fs.existsSync(path.join(__dirname, '../src/renderer/components/HistoryView.tsx')), 'HistoryView.tsx must be deleted');
+  assert.ok(!fs.existsSync(path.join(__dirname, '../src/renderer/components/VideoGrid.tsx')), 'VideoGrid.tsx must be deleted');
 });
 
-test('NSIS Overwrite Upgrade Configuration: electron-builder.yml validation', () => {
-  const fs = require('fs');
+test('NSIS Overwrite Upgrade Configuration: electron-builder.yml and installer.nsh validation', () => {
   const builderContent = fs.readFileSync(path.join(__dirname, '../electron-builder.yml'), 'utf-8');
+  const nshContent = fs.readFileSync(path.join(__dirname, '../build/installer.nsh'), 'utf-8');
 
-  // Overwrite upgrade persistence guarantees
-  assert.ok(builderContent.includes('guid: e89f81a6-8025-4c07-b31a-e7c65349b1fa'), 'NSIS must have fixed guid for overwrite recognition');
+  // Overwrite upgrade persistence guarantees matching v1.0.1 standard GUID
+  assert.ok(builderContent.includes('guid: 9a0860ac-5b35-56d3-9062-a2697b0588fb'), 'NSIS must have standard v1.0.1 GUID for overwrite recognition');
   assert.ok(builderContent.includes('uninstallDisplayName: ${productName}'), 'NSIS must have unified uninstallDisplayName');
   assert.ok(builderContent.includes('deleteAppDataOnUninstall: false'), 'Must protect user data on upgrades/uninstalls');
   assert.ok(builderContent.includes('allowToChangeInstallationDirectory: true'), 'Must support directory selection');
   assert.ok(builderContent.includes('oneClick: false'), 'Standard installation wizard');
-});
+  assert.ok(builderContent.includes('artifactName: TriVideo-Setup-${version}.${ext}'), 'Must use ASCII-safe installer artifact name');
+  assert.ok(builderContent.includes('artifactName: TriVideo-Portable-${version}.${ext}'), 'Must use ASCII-safe portable artifact name');
 
+  // installer.nsh checks both standard GUID and legacy keys
+  assert.ok(nshContent.includes('9a0860ac-5b35-56d3-9062-a2697b0588fb'), 'installer.nsh must check 9a0860ac GUID');
+  assert.ok(nshContent.includes('e89f81a6-8025-4c07-b31a-e7c65349b1fa'), 'installer.nsh must clean legacy GUID');
+});

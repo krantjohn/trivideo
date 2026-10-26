@@ -368,12 +368,31 @@ export class PlatformManager {
             html, body {
               min-width: 0 !important;
               max-width: 100% !important;
-              overflow-x: hidden !important;
+              overflow-x: auto !important;
             }
             #i_cecream, #app, .bili-layout, .bili-feed4, #biliMainHeader, .bili-header, .video-container-v1, .bpx-player-container {
               max-width: 100% !important;
               min-width: 0 !important;
               box-sizing: border-box !important;
+            }
+            .bili-header, .bili-header__bar, .bili-header__channel {
+              max-width: 100% !important;
+              min-width: 0 !important;
+            }
+            .video-container-v1 {
+              display: flex !important;
+              flex-wrap: wrap !important;
+              justify-content: center !important;
+              max-width: 100% !important;
+              min-width: 0 !important;
+            }
+            .video-container-v1 .left-container {
+              min-width: 0 !important;
+              flex: 1 1 600px !important;
+            }
+            .video-container-v1 .right-container {
+              min-width: 0 !important;
+              flex: 0 0 350px !important;
             }
           `).catch(() => {});
         }
@@ -384,6 +403,7 @@ export class PlatformManager {
       wc.on('dom-ready', injectBiliStyles);
       wc.on('did-finish-load', injectBiliStyles);
       wc.on('did-navigate', injectBiliStyles);
+      wc.on('did-navigate-in-page', injectBiliStyles);
     }
 
     wc.on('enter-html-full-screen', () => {
@@ -887,13 +907,32 @@ export class PlatformManager {
       if (b && b.width > 0) return b;
       if (pane.id === 'pane-1') return this.leftBounds;
       if (pane.id === 'pane-2') return this.rightBounds;
+      const totalW = this.singleBounds.width || 1200;
+      const totalH = this.singleBounds.height || 762;
+      const startX = this.singleBounds.x || 240;
+      const startY = this.singleBounds.y || 138;
+      if (this.layoutMode === 'triple') {
+        if (pane.id === 'pane-3') {
+          return {
+            x: startX + Math.round(totalW * 0.6),
+            y: startY + Math.round(totalH * 0.5),
+            width: Math.round(totalW * 0.4),
+            height: Math.round(totalH * 0.5),
+          };
+        }
+      } else if (this.layoutMode === 'quad') {
+        const halfW = Math.round(totalW * 0.5);
+        const halfH = Math.round(totalH * 0.5);
+        if (pane.id === 'pane-3') return { x: startX, y: startY + halfH, width: halfW, height: halfH };
+        if (pane.id === 'pane-4') return { x: startX + halfW, y: startY + halfH, width: halfW, height: halfH };
+      }
     }
     return this.singleBounds;
   }
 
   public static calculateAdaptiveZoomFactor(platform: PlatformId, width: number): number {
     if (platform === 'bilibili') {
-      const BILI_BASE_WIDTH = 1100;
+      const BILI_BASE_WIDTH = 1160;
       if (width > 0 && width < BILI_BASE_WIDTH) {
         return Math.min(1.0, Math.max(0.25, Math.round((width / BILI_BASE_WIDTH) * 1000) / 1000));
       }

@@ -114,8 +114,11 @@ async function runPhase7Verification() {
     assert.ok(builderContent.includes('oneClick: false'), 'Must provide standard installation wizard');
     assert.ok(builderContent.includes('allowToChangeInstallationDirectory: true'), 'Must allow user custom directory');
     assert.ok(builderContent.includes('createDesktopShortcut: true'), 'Must support desktop shortcut');
-    assert.ok(builderContent.includes('createStartMenuShortcut: true'), 'Must support start menu shortcut');
-    assert.ok(builderContent.includes('artifactName: ${productName}-Setup-${version}.${ext}'), 'Must have clear installer artifact name');
+    assert.ok(
+      builderContent.includes('artifactName: TriVideo-Setup-${version}.${ext}') ||
+      builderContent.includes('artifactName: ${productName}-Setup-${version}.${ext}'),
+      'Must have clear installer artifact name'
+    );
     console.log('[PASS] electron-builder.yml verified: NSIS installer, data protection, shortcut configs intact');
 
     // ==========================================

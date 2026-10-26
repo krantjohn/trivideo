@@ -114,11 +114,10 @@ trivideo/
 │     ├─ components/
 │     │  ├─ Sidebar.tsx           # 左侧可折叠功能侧边栏
 │     │  ├─ TopNav.tsx            # 顶部平台切换、导航控制与搜索
-│     │  ├─ CategoryBar.tsx       # 频道快捷标签与浏览视图模式切换
-│     │  ├─ VideoGrid.tsx         # 多列响应式视频卡片网格
-│     │  ├─ FavoritesView.tsx     # 收藏管理与搜索过滤视图
-│     │  ├─ HistoryView.tsx       # 浏览历史记录追踪视图
-│     │  └─ SettingsModal.tsx     # 主题、平台会话清理与设置弹窗
+│     │  ├─ CategoryBar.tsx       # 频道快捷标签栏
+│     │  ├─ SplitView.tsx         # 多屏/分屏视口网格与拖拽分频器
+│     │  ├─ OnboardingModal.tsx   # 首次运行平台向导弹窗
+│     │  └─ SettingsModal.tsx     # 主题、平台管理、覆盖更新与设置弹窗
 │     ├─ services/
 │     │  └─ api.ts                # 前端服务层与 Electron IPC 通信网关
 │     └─ styles/

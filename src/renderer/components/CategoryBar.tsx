@@ -6,8 +6,6 @@ interface CategoryBarProps {
   onSelectCategory: (url: string) => void;
   viewMode?: ViewMode;
   onSelectViewMode?: (mode: ViewMode) => void;
-  bookmarkCount?: number;
-  historyCount?: number;
   currentUrl?: string;
 }
 
